@@ -193,6 +193,24 @@ export default function DashboardsPage() {
     }
   };
 
+  const handleToggleStatus = async (id: string, currentStatus: 'active' | 'inactive') => {
+    try {
+      setError(null);
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const { error: updateError } = await supabase
+        .from('api_keys')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      await fetchApiKeys();
+    } catch (err) {
+      console.error('Error toggling status:', err);
+      setError(err instanceof Error ? err.message : 'Failed to toggle status');
+    }
+  };
+
   const openCreateModal = () => {
     setEditingKey(null);
     setFormData({ name: '', key: '' });
@@ -478,9 +496,17 @@ export default function DashboardsPage() {
                       </div>
                     </td>
                     <td className="px-2 sm:px-4 py-4 hidden md:table-cell">
-                      <span className="inline-flex items-center rounded-full bg-green-500/20 px-2.5 py-0.5 text-xs font-medium text-green-400">
-                        Active
-                      </span>
+                      <button
+                        onClick={() => handleToggleStatus(apiKey.id, apiKey.status || 'active')}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors hover:opacity-80 ${
+                          apiKey.status === 'active'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}
+                        title={`Click to ${apiKey.status === 'active' ? 'deactivate' : 'activate'}`}
+                      >
+                        {apiKey.status === 'active' ? 'Active' : 'Inactive'}
+                      </button>
                     </td>
                     <td className="px-2 sm:px-4 py-4 text-xs sm:text-sm text-[#888] hidden lg:table-cell">
                       {formatDate(apiKey.createdAt)}
