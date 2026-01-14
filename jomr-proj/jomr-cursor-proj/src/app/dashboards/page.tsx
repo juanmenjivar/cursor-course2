@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 interface ApiKey {
   id: string;
@@ -9,6 +10,15 @@ interface ApiKey {
   key: string;
   createdAt: string;
   lastUsed?: string;
+  status?: 'active' | 'inactive';
+}
+
+interface DatabaseApiKey {
+  id: string;
+  name: string;
+  key: string;
+  created_at: string;
+  last_used?: string;
   status?: 'active' | 'inactive';
 }
 
@@ -26,14 +36,44 @@ export default function DashboardsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showTableSettings, setShowTableSettings] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('apiKeys');
-    if (stored) {
-      const keys = JSON.parse(stored);
+  // Convert database format to frontend format
+  const dbToApiKey = (dbKey: DatabaseApiKey): ApiKey => ({
+    id: dbKey.id,
+    name: dbKey.name,
+    key: dbKey.key,
+    createdAt: dbKey.created_at,
+    lastUsed: dbKey.last_used || undefined,
+    status: dbKey.status || 'active',
+  });
+
+  // Fetch API keys from Supabase
+  const fetchApiKeys = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase
+        .from('api_keys')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      const keys = (data || []).map(dbToApiKey);
       setApiKeys(keys);
       setFilteredKeys(keys);
+    } catch (err) {
+      console.error('Error fetching API keys:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch API keys');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchApiKeys();
   }, []);
 
   useEffect(() => {
@@ -49,11 +89,6 @@ export default function DashboardsPage() {
     setCurrentPage(1);
   }, [searchQuery, apiKeys]);
 
-  const saveToLocalStorage = (keys: ApiKey[]) => {
-    localStorage.setItem('apiKeys', JSON.stringify(keys));
-    setApiKeys(keys);
-  };
-
   const generateApiKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = 'sk-';
@@ -63,51 +98,98 @@ export default function DashboardsPage() {
     return result;
   };
 
-  const handleCreate = () => {
-    const newKey: ApiKey = {
-      id: Date.now().toString(),
-      name: formData.name || 'Untitled API Key',
-      key: formData.key || generateApiKey(),
-      createdAt: new Date().toISOString(),
-      status: 'active',
-    };
-    const updated = [...apiKeys, newKey];
-    saveToLocalStorage(updated);
-    setIsModalOpen(false);
-    setFormData({ name: '', key: '' });
+  const handleCreate = async () => {
+    try {
+      setError(null);
+      const { data, error: createError } = await supabase
+        .from('api_keys')
+        .insert([
+          {
+            name: formData.name || 'Untitled API Key',
+            key: formData.key || generateApiKey(),
+            status: 'active',
+          },
+        ])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      await fetchApiKeys();
+      setIsModalOpen(false);
+      setFormData({ name: '', key: '' });
+    } catch (err) {
+      console.error('Error creating API key:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create API key');
+    }
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingKey) return;
-    const updated = apiKeys.map((k) =>
-      k.id === editingKey.id
-        ? { ...k, name: formData.name || k.name, key: formData.key || k.key }
-        : k
-    );
-    saveToLocalStorage(updated);
-    setIsModalOpen(false);
-    setEditingKey(null);
-    setFormData({ name: '', key: '' });
+    try {
+      setError(null);
+      const { error: updateError } = await supabase
+        .from('api_keys')
+        .update({
+          name: formData.name || editingKey.name,
+          key: formData.key || editingKey.key,
+        })
+        .eq('id', editingKey.id);
+
+      if (updateError) throw updateError;
+
+      await fetchApiKeys();
+      setIsModalOpen(false);
+      setEditingKey(null);
+      setFormData({ name: '', key: '' });
+    } catch (err) {
+      console.error('Error updating API key:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update API key');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this API key?')) {
-      const updated = apiKeys.filter((k) => k.id !== id);
-      saveToLocalStorage(updated);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this API key?')) return;
+
+    try {
+      setError(null);
+      const { error: deleteError } = await supabase
+        .from('api_keys')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      await fetchApiKeys();
       setSelectedKeys((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
       });
+    } catch (err) {
+      console.error('Error deleting API key:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete API key');
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedKeys.size === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedKeys.size} API key(s)?`)) {
-      const updated = apiKeys.filter((k) => !selectedKeys.has(k.id));
-      saveToLocalStorage(updated);
+    if (!confirm(`Are you sure you want to delete ${selectedKeys.size} API key(s)?`)) return;
+
+    try {
+      setError(null);
+      const { error: deleteError } = await supabase
+        .from('api_keys')
+        .delete()
+        .in('id', Array.from(selectedKeys));
+
+      if (deleteError) throw deleteError;
+
+      await fetchApiKeys();
       setSelectedKeys(new Set());
+    } catch (err) {
+      console.error('Error deleting API keys:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete API keys');
     }
   };
 
@@ -170,6 +252,23 @@ export default function DashboardsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="mx-auto max-w-[1920px] px-4 py-4 sm:px-6 sm:py-8">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-400">
+            <div className="flex items-center justify-between">
+              <span>{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#1a1a1a] pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -304,7 +403,19 @@ export default function DashboardsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedKeys.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center text-[#888]">
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="h-5 w-5 animate-spin text-[#3b82f6]" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Loading...
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedKeys.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-[#888]">
                     {searchQuery ? 'No API keys found matching your search.' : 'No API keys yet. Create your first one!'}
