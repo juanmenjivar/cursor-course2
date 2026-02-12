@@ -1,0 +1,24 @@
+services:
+  # Next.js Application (listens on port 3000 inside container)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jomr-cursor-proj
+    ports:
+      - "3000:3000"
+    environment:
+      # Do NOT set NEXT_PUBLIC_* here - they are loaded from env_file. Host interpolation would override env_file with empty values.
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    # Env: put .env.local in project root, or use src/app/.env.local (change path below if needed)
+    env_file:
+      - ./src/app/.env.local
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

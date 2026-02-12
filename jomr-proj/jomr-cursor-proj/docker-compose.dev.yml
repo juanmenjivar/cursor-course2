@@ -1,0 +1,26 @@
+services:
+  # Next.js Development Server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: jomr-cursor-proj-dev-container
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      # Do NOT set NEXT_PUBLIC_* here - they are loaded from env_file. Host interpolation would override env_file with empty values.
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    # Env: put .env.local in project root, or use src/app/.env.local (change path below if needed)
+    env_file:
+      - ./src/app/.env.local
+    command: npm run dev -- -H 0.0.0.0
+    restart: unless-stopped
+    stdin_open: true
+    tty: true

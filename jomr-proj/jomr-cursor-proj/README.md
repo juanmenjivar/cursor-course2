@@ -2,7 +2,32 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Option 1: Docker (Recommended)
+
+The easiest way to run this project locally is using Docker:
+
+```bash
+# Production mode
+docker-compose up --build
+
+# Development mode (with hot reload)
+docker-compose -f docker-compose.dev.yml up --build
+```
+
+See [DOCKER.md](./DOCKER.md) for detailed Docker instructions.
+
+**💡 Running in VS Code?** Check out [VSCODE_DOCKER.md](./VSCODE_DOCKER.md) for VS Code-specific Docker workflows.
+
+### Option 2: Local Development
+
+First, install dependencies and set up environment variables:
+
+```bash
+npm install
+# Create .env.local with your Supabase credentials (see SUPABASE_SETUP.md)
+```
+
+Then run the development server:
 
 ```bash
 npm run dev
@@ -28,6 +53,13 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Documentation
+
+- [DOCKER.md](./DOCKER.md) - Docker setup and usage guide
+- [VSCODE_DOCKER.md](./VSCODE_DOCKER.md) - Running Docker in VS Code guide
+- [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Supabase configuration guide
+- [CRUD_REVIEW.md](./CRUD_REVIEW.md) - API implementation review
 
 ## Deploy on Vercel
 
