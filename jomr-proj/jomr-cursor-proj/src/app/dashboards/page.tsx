@@ -38,6 +38,7 @@ export default function DashboardsPage() {
   const [showTableSettings, setShowTableSettings] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single'; key: ApiKey } | { type: 'bulk'; count: number } | null>(null);
 
   // Convert database format to frontend format
   const dbToApiKey = (dbKey: DatabaseApiKey): ApiKey => ({
@@ -149,8 +150,6 @@ export default function DashboardsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this API key?')) return;
-
     try {
       setError(null);
       const { error: deleteError } = await supabase
@@ -166,6 +165,7 @@ export default function DashboardsPage() {
         newSet.delete(id);
         return newSet;
       });
+      setDeleteConfirm(null);
     } catch (err) {
       console.error('Error deleting API key:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete API key');
@@ -174,7 +174,6 @@ export default function DashboardsPage() {
 
   const handleBulkDelete = async () => {
     if (selectedKeys.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedKeys.size} API key(s)?`)) return;
 
     try {
       setError(null);
@@ -187,11 +186,15 @@ export default function DashboardsPage() {
 
       await fetchApiKeys();
       setSelectedKeys(new Set());
+      setDeleteConfirm(null);
     } catch (err) {
       console.error('Error deleting API keys:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete API keys');
     }
   };
+
+  const openDeleteConfirm = (key: ApiKey) => setDeleteConfirm({ type: 'single', key });
+  const openBulkDeleteConfirm = () => selectedKeys.size > 0 && setDeleteConfirm({ type: 'bulk', count: selectedKeys.size });
 
   const handleToggleStatus = async (id: string, currentStatus: 'active' | 'inactive') => {
     try {
@@ -377,7 +380,7 @@ export default function DashboardsPage() {
               {showActions && (
                 <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-lg border border-[#333] bg-[#1a1a1a] shadow-lg">
                   <button
-                    onClick={handleBulkDelete}
+                    onClick={openBulkDeleteConfirm}
                     disabled={selectedKeys.size === 0}
                     className="w-full px-4 py-2 text-left text-sm text-white hover:bg-[#222] disabled:text-[#666] disabled:cursor-not-allowed"
                   >
@@ -541,7 +544,7 @@ export default function DashboardsPage() {
                     </td>
                     <td className="px-2 sm:px-4 py-4">
                       <button
-                        onClick={() => handleDelete(apiKey.id)}
+                        onClick={() => openDeleteConfirm(apiKey)}
                         className="text-red-400 hover:text-red-300 transition-colors"
                       >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,7 +625,41 @@ export default function DashboardsPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 sm:p-6">
+          <div className="w-full max-w-md rounded-lg border border-[#333] bg-[#1a1a1a] p-4 sm:p-6">
+            <h2 className="mb-4 text-xl font-semibold text-white">
+              {deleteConfirm.type === 'single' ? 'Delete API Key?' : 'Delete API Keys?'}
+            </h2>
+            <p className="mb-6 text-[#888]">
+              {deleteConfirm.type === 'single'
+                ? `Are you sure you want to delete "${deleteConfirm.key.name}"? This action cannot be undone.`
+                : `Are you sure you want to delete ${deleteConfirm.count} API key(s)? This action cannot be undone.`}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 rounded-lg border border-[#333] bg-[#0a0a0a] px-4 py-2 text-sm font-medium text-white hover:bg-[#222] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  deleteConfirm.type === 'single'
+                    ? handleDelete(deleteConfirm.key.id)
+                    : handleBulkDelete()
+                }
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 sm:p-6">
           <div className="w-full max-w-md rounded-lg border border-[#333] bg-[#1a1a1a] p-4 sm:p-6">
