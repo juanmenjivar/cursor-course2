@@ -63,17 +63,21 @@ export const fetchAllApiKeys = async (): Promise<ApiKey[]> => {
   return (data || []).map(dbToApiKey);
 };
 
+// Validation result: 'valid' | 'invalid' (not in DB) | 'disabled' (exists but inactive)
+export type ValidationResult = 'valid' | 'invalid' | 'disabled';
+
 // Validate API key: check if key exists in DB and is active
-export const validateApiKey = async (key: string): Promise<boolean> => {
-  if (!key?.trim()) return false;
+export const validateApiKey = async (key: string): Promise<ValidationResult> => {
+  if (!key?.trim()) return 'invalid';
   const { data, error } = await supabase
     .from('api_keys')
     .select('id, status')
     .eq('key', key.trim())
     .maybeSingle();
 
-  if (error) return false;
-  return !!data && data.status === 'active';
+  if (error) return 'invalid';
+  if (!data) return 'invalid';
+  return data.status === 'active' ? 'valid' : 'disabled';
 };
 
 // READ: Fetch a single API key by ID

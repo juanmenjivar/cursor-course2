@@ -10,7 +10,7 @@ import { validateApiKey } from '@/lib/api-keys';
 const PLAYGROUND_KEY_STORAGE = 'playground_api_key';
 
 export default function ValidatePage() {
-  const [valid, setValid] = useState<boolean | null>(null);
+  const [validationStatus, setValidationStatus] = useState<'valid' | 'invalid' | 'disabled' | null>(null);
   const [showNotification, setShowNotification] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
@@ -22,8 +22,8 @@ export default function ValidatePage() {
       return;
     }
 
-    validateApiKey(key).then((isValid) => {
-      setValid(isValid);
+    validateApiKey(key).then((result) => {
+      setValidationStatus(result);
       sessionStorage.removeItem(PLAYGROUND_KEY_STORAGE);
     });
   }, [router]);
@@ -42,10 +42,16 @@ export default function ValidatePage() {
 
           <h1 className="mb-2 text-2xl font-semibold text-white">Validation Result</h1>
           <p className="mb-8 text-[#888]">
-            {valid === null ? 'Validating...' : valid ? 'Your API key is valid and active.' : 'The API key is invalid or inactive.'}
+            {validationStatus === null
+              ? 'Validating...'
+              : validationStatus === 'valid'
+                ? 'Your API key is valid and active.'
+                : validationStatus === 'invalid'
+                  ? 'The API key is invalid.'
+                  : 'The API key is disabled.'}
           </p>
 
-          {valid === null && (
+          {validationStatus === null && (
             <div className="flex items-center gap-2 text-[#888]">
               <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -55,7 +61,7 @@ export default function ValidatePage() {
             </div>
           )}
 
-          {valid !== null && (
+          {validationStatus !== null && (
             <Link
               href="/dashboards/playground"
               className="inline-flex rounded-lg bg-[#3b82f6] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2563eb] transition-colors"
@@ -66,9 +72,9 @@ export default function ValidatePage() {
         </div>
       </main>
 
-      {valid !== null && showNotification && (
+      {validationStatus !== null && showNotification && (
         <ValidationNotification
-          valid={valid}
+          status={validationStatus}
           onDismiss={() => setShowNotification(false)}
           autoHideMs={4000}
         />
