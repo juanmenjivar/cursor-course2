@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import Sidebar, { SidebarToggle } from '@/components/Sidebar';
 
 interface ApiKey {
   id: string;
@@ -39,6 +40,7 @@ export default function DashboardsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'single'; key: ApiKey } | { type: 'bulk'; count: number } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Convert database format to frontend format
   const dbToApiKey = (dbKey: DatabaseApiKey): ApiKey => ({
@@ -271,8 +273,10 @@ export default function DashboardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <div className="mx-auto max-w-[1920px] px-4 py-4 sm:px-6 sm:py-8">
+    <div className="relative flex min-h-screen">
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(false)} />
+      <main className="min-w-0 flex-1 overflow-auto bg-[#0a0a0a] text-white">
+        <div className="mx-auto max-w-[1920px] px-4 py-4 sm:px-6 sm:py-8">
         {/* Error Message */}
         {error && (
           <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-400">
@@ -293,12 +297,15 @@ export default function DashboardsPage() {
         {/* Header */}
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#1a1a1a] pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <Link
-              href="/"
-              className="text-sm text-[#888] hover:text-white transition-colors w-fit"
-            >
-              ← Back
-            </Link>
+            <div className="flex items-center gap-2">
+              <SidebarToggle isOpen={sidebarOpen} onToggle={() => setSidebarOpen((o) => !o)} />
+              <Link
+                href="/"
+                className="text-sm text-[#888] hover:text-white transition-colors w-fit"
+              >
+                ← Back
+              </Link>
+            </div>
             <div>
               <h1 className="text-lg sm:text-2xl font-semibold text-white">
                 All API Keys: <strong>{apiKeys.length}</strong>{' '}
@@ -623,7 +630,8 @@ export default function DashboardsPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </main>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
