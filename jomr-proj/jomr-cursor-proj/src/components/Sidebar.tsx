@@ -8,13 +8,14 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   activePath?: string;
+  exactMatch?: boolean;
   external?: boolean;
 }
 
 const navItems: NavItem[] = [
   { href: '/', label: 'Overview', icon: HomeIcon },
-  { href: '/dashboards', label: 'API Keys', icon: KeyIcon, activePath: '/dashboards' },
-  { href: '/dashboards', label: 'API Playground', icon: CodeIcon },
+  { href: '/dashboards', label: 'API Keys', icon: KeyIcon, activePath: '/dashboards', exactMatch: true },
+  { href: '/dashboards/playground', label: 'API Playground', icon: CodeIcon, activePath: '/dashboards/playground' },
   { href: '#', label: 'Documentation', icon: DocIcon, external: true },
 ];
 
@@ -119,7 +120,9 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
       <nav className="flex-1 space-y-0.5 px-4 py-4">
         {navItems.map((item) => {
           const isActive = item.activePath
-            ? pathname.startsWith(item.activePath)
+            ? item.exactMatch
+              ? pathname === item.activePath
+              : pathname.startsWith(item.activePath)
             : pathname === item.href;
           const Icon = item.icon;
 
