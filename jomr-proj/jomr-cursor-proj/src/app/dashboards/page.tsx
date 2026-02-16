@@ -651,7 +651,7 @@ export default function DashboardsPage() {
                     type="text"
                     value={formData.key}
                     onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                    placeholder="sk-..."
+                    placeholder="jomr-..."
                     className="flex-1 rounded-lg border border-[#333] bg-[#0a0a0a] px-3 py-2 font-mono text-sm text-white placeholder:text-[#666] focus:border-[#3b82f6] focus:outline-none focus:ring-1 focus:ring-[#3b82f6]"
                   />
                   {!editingKey && (
