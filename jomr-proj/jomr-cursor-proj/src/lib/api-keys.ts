@@ -77,7 +77,8 @@ export const validateApiKey = async (key: string): Promise<ValidationResult> => 
 
   if (error) return 'invalid';
   if (!data) return 'invalid';
-  return data.status === 'active' ? 'valid' : 'disabled';
+  const row = data as { status: 'active' | 'inactive' };
+  return row.status === 'active' ? 'valid' : 'disabled';
 };
 
 // READ: Fetch a single API key by ID
