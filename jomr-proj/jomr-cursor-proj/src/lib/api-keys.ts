@@ -39,9 +39,10 @@ export const createApiKey = async (data: {
     status: data.status || 'active',
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client type inference fails with custom Database type in prod build
   const { data: result, error } = await supabase
     .from('api_keys')
-    .insert([insertData] as ApiKeyInsert[])
+    .insert([insertData] as any)
     .select()
     .single();
 
