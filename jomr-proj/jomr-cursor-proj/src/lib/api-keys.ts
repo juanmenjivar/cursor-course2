@@ -41,7 +41,7 @@ export const createApiKey = async (data: {
 
   const { data: result, error } = await supabase
     .from('api_keys')
-    .insert([insertData])
+    .insert([insertData] as ApiKeyInsert[])
     .select()
     .single();
 
