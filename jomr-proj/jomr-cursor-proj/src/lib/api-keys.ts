@@ -104,7 +104,7 @@ export const updateApiKey = async (
 ): Promise<void> => {
   const { error } = await supabase
     .from('api_keys')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id);
 
   if (error) throw error;
