@@ -104,8 +104,7 @@ export const updateApiKey = async (
 ): Promise<void> => {
   const { error } = await supabase
     .from('api_keys')
-    // @ts-expect-error - Supabase client infers 'never' for update when using custom Database type
-    .update(updates)
+    .update(updates as any)
     .eq('id', id);
 
   if (error) throw error;

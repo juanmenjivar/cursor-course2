@@ -2,6 +2,12 @@
 
 This guide explains how to run the `jomr-cursor-proj` application using Docker.
 
+> **Note:** This project uses Yarn. If `yarn.lock` is missing, run this one-off command from the project root to create it:
+> ```bash
+> docker run --rm -v "<project-path>:/app" -w /app node:20-alpine sh -c "yarn install"
+> ```
+> Replace `<project-path>` with your project directory (e.g. `%cd%` in cmd, `${PWD}` in PowerShell, `$(pwd)` in bash).
+
 ## Prerequisites
 
 - [Docker](https://www.docker.com/get-started) installed (version 20.10 or later)
@@ -82,7 +88,7 @@ docker-compose -f docker-compose.dev.yml down
 docker-compose -f docker-compose.dev.yml logs -f app
 
 # Execute commands in container
-docker-compose -f docker-compose.dev.yml exec app npm run lint
+docker-compose -f docker-compose.dev.yml exec app yarn lint
 ```
 
 ## Docker Files Overview

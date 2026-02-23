@@ -5,8 +5,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json yarn.lock* ./
+# strict-ssl false for corporate proxies with self-signed certs
+RUN yarn config set strict-ssl false && \
+    (yarn install --frozen-lockfile || yarn install)
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -20,7 +22,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner

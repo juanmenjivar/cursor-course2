@@ -7,10 +7,12 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json yarn.lock* ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with Yarn (bundled in node:20-alpine)
+# strict-ssl false for corporate proxies with self-signed certs
+RUN yarn config set strict-ssl false && \
+    (yarn install --frozen-lockfile || yarn install)
 
 # Copy the rest of the application
 COPY . .
@@ -19,4 +21,4 @@ COPY . .
 EXPOSE 3000
 
 # Default command (can be overridden in docker-compose)
-CMD ["npm", "run", "dev"]
+CMD ["yarn", "dev"]

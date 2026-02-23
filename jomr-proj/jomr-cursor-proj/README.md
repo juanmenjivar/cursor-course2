@@ -23,20 +23,14 @@ See [DOCKER.md](./DOCKER.md) for detailed Docker instructions.
 First, install dependencies and set up environment variables:
 
 ```bash
-npm install
+yarn install
 # Create .env.local with your Supabase credentials (see SUPABASE_SETUP.md)
 ```
 
 Then run the development server:
 
 ```bash
-npm run dev
-# or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

@@ -41,7 +41,7 @@ This will create:
 
 1. Restart your Next.js development server:
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 2. Navigate to `/dashboards` in your app

@@ -20,7 +20,7 @@ services:
     # Env: put .env.local in project root, or use src/app/.env.local (change path below if needed)
     env_file:
       - ./src/app/.env.local
-    command: npm run dev -- -H 0.0.0.0
+    command: yarn dev -- -H 0.0.0.0
     restart: unless-stopped
     stdin_open: true
     tty: true
