@@ -41,7 +41,8 @@ export const createApiKey = async (data: {
 
   const { data: result, error } = await supabase
     .from('api_keys')
-    .insert([insertData] as any)
+    // Workaround: manual Database types can cause insert() to expect 'never'; cast satisfies compiler
+    .insert(insertData as never)
     .select()
     .single();
 
@@ -104,7 +105,8 @@ export const updateApiKey = async (
 ): Promise<void> => {
   const { error } = await supabase
     .from('api_keys')
-    .update(updates as any)
+    // Workaround: manual Database types can cause update() to expect 'never'; cast satisfies compiler
+    .update(updates as never)
     .eq('id', id);
 
   if (error) throw error;

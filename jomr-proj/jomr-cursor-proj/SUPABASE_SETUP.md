@@ -72,3 +72,18 @@ You can view your API keys in Supabase:
 - Check the browser console for errors
 - Verify your Supabase URL and anon key are correct
 - Check the Supabase logs in your project dashboard
+
+## Updating Database Types
+
+When you change your database schema, regenerate TypeScript types so they stay in sync. Since this project runs in Docker (no local npm), use:
+
+```powershell
+# From project root
+docker run --rm -v "${PWD}:/app" -w /app -e SUPABASE_ACCESS_TOKEN=your_token -e PROJECT_REF=your_project_id node:20-alpine sh -c "npx supabase@latest gen types typescript --project-id $PROJECT_REF --schema public > src/lib/database.types.ts"
+```
+
+Replace:
+- `your_token` – from [Supabase Account → Access Tokens](https://supabase.com/dashboard/account/tokens)
+- `your_project_id` – from your project URL: `https://supabase.com/dashboard/project/<project_id>`
+
+The file is written to `src/lib/database.types.ts` on your local machine via the mounted volume.

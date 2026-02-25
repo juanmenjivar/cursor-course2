@@ -16,6 +16,16 @@ This guide explains how to run the `jomr-cursor-proj` application using Docker.
 
 ## Quick Start
 
+### 0. Update Lockfile (after changing package.json or resolutions)
+
+If you changed `package.json` or `resolutions`, update the lockfile via Docker:
+
+```powershell
+docker run --rm -v "${PWD}:/app" -w /app node:20-alpine sh -c "yarn config set strict-ssl false && yarn install"
+```
+
+This writes the updated `yarn.lock` to your project. Commit it before building.
+
 ### 1. Set Up Environment Variables
 
 Docker Compose loads env from **`./src/app/.env.local`** by default. Create that file (or put `.env.local` in the project root and change `env_file` in `docker-compose.yml` / `docker-compose.dev.yml` to `- .env.local`).
@@ -26,6 +36,14 @@ Required contents:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
+
+**For AI Chat (LangChain + Gemini):**
+
+```env
+GOOGLE_API_KEY=your-google-api-key
+```
+
+Get a key from [Google AI Studio](https://aistudio.google.com/app/apikey). See [LANGCHAIN_SETUP.md](./LANGCHAIN_SETUP.md) for details.
 
 ### 2. Run the Application
 
@@ -226,6 +244,7 @@ Ensure the file contains:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
+GOOGLE_API_KEY=your-google-api-key   # optional, for AI Chat
 ```
 
 ## Production Deployment

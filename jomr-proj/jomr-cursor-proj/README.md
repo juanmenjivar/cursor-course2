@@ -53,6 +53,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 - [DOCKER.md](./DOCKER.md) - Docker setup and usage guide
 - [VSCODE_DOCKER.md](./VSCODE_DOCKER.md) - Running Docker in VS Code guide
 - [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Supabase configuration guide
+- [LANGCHAIN_SETUP.md](./LANGCHAIN_SETUP.md) - LangChain + Google Gemini setup for AI Chat
 - [CRUD_REVIEW.md](./CRUD_REVIEW.md) - API implementation review
 
 ## Deploy on Vercel

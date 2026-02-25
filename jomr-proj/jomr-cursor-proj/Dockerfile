@@ -12,14 +12,16 @@ RUN yarn config set strict-ssl false && \
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
+RUN apk add --no-cache ca-certificates
 WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variables for build
+# Set environment variables for build (TLS certs for Google Fonts fetch)
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS=1
 
 # Build the application
 RUN yarn build
