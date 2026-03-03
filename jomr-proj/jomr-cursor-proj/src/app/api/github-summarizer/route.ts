@@ -53,7 +53,9 @@ async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
     ],
   ]);
   const messages = await prompt.invoke({ readme });
-  const llm = getChatModel().withStructuredOutput(GitHubSummarySchema);
+  //const llm = getChatModel().withStructuredOutput(GitHubSummarySchema);
+  // Workaround for TS "Type instantiation is excessively deep" with LangChain  
+  const llm = getChatModel().withStructuredOutput(GitHubSummarySchema) as unknown as ReturnType<typeof getChatModel>;
   const raw = await llm.invoke(messages);
   if (raw && typeof raw === 'object' && 'parsed' in raw) {
     return (raw as { parsed: GitHubSummary }).parsed;
