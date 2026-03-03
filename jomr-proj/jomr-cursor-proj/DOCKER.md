@@ -18,7 +18,7 @@ This guide explains how to run the `jomr-cursor-proj` application using Docker.
 
 ### 0. Update Lockfile (after changing package.json or resolutions)
 
-If you changed `package.json` or `resolutions`, update the lockfile via Docker:
+If you changed `package.json` or `resolutions` (e.g. added `zod` for the github-summarizer API), update the lockfile via Docker:
 
 ```powershell
 docker run --rm -v "${PWD}:/app" -w /app node:20-alpine sh -c "yarn config set strict-ssl false && yarn install"
@@ -108,6 +108,10 @@ docker-compose -f docker-compose.dev.yml logs -f app
 # Execute commands in container
 docker-compose -f docker-compose.dev.yml exec app yarn lint
 ```
+
+## Dependencies (Docker)
+
+All dependencies are installed from `package.json` during the image build. Key runtime deps include `zod` (for the `/api/github-summarizer` structured output). After adding new packages to `package.json`, run the lockfile update command in step 0 above before building.
 
 ## Docker Files Overview
 

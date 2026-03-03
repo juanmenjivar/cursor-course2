@@ -6,7 +6,7 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files (deps include zod for github-summarizer API)
 COPY package.json yarn.lock* ./
 
 # Install dependencies with Yarn (bundled in node:20-alpine)

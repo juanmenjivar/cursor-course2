@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { invokeGemini } from '@/lib/llm';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { z } from 'zod';
+import { getChatModel } from '@/lib/llm';
 import { validateApiKey } from '@/lib/api-keys';
 
 export const runtime = 'nodejs';
+
+const GitHubSummarySchema = z.object({
+  summary: z.string().describe('Concise summary of the GitHub repository based on the README'),
+  cool_fact: z.array(z.string()).describe('List of interesting or surprising facts about the repository'),
+});
+
+type GitHubSummary = z.infer<typeof GitHubSummarySchema>;
 
 function getApiKeyFromRequest(req: NextRequest): string | null {
   const headerKey =
@@ -34,6 +43,22 @@ async function fetchReadmeFromGitHub(owner: string, repo: string): Promise<strin
     if (resp.ok) return await resp.text();
   }
   return null;
+}
+
+async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      'user',
+      'Summarize this GitHub repository from this readme file content:\n\n{readme}',
+    ],
+  ]);
+  const messages = await prompt.invoke({ readme });
+  const llm = getChatModel().withStructuredOutput(GitHubSummarySchema);
+  const raw = await llm.invoke(messages);
+  if (raw && typeof raw === 'object' && 'parsed' in raw) {
+    return (raw as { parsed: GitHubSummary }).parsed;
+  }
+  return raw as GitHubSummary;
 }
 
 export async function POST(req: NextRequest) {
@@ -81,20 +106,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let summary: string | null = null;
+    let result: GitHubSummary | null = null;
     try {
-      summary = await invokeGemini(
-        `Summarize the following GitHub repository README in 2-4 concise paragraphs. Focus on the project's purpose, main features, and how to use it.\n\n---\n\n${readme.slice(0, 10000)}`
-      );
+      result = await summarizeReadme(readme.slice(0, 10000));
     } catch {
-      // LLM failed (e.g. leaked key); still return readme, summary stays null
+      // LLM failed (e.g. leaked key); result stays null
     }
 
     return NextResponse.json({
       owner: repoInfo.owner,
       repo: repoInfo.repo,
       readme,
-      summary,
+      summary: result?.summary ?? null,
+      cool_fact: result?.cool_fact ?? null,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';

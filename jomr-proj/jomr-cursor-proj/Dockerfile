@@ -4,7 +4,7 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
+# Copy package files (deps include zod for github-summarizer API)
 COPY package.json yarn.lock* ./
 # strict-ssl false for corporate proxies with self-signed certs
 RUN yarn config set strict-ssl false && \
