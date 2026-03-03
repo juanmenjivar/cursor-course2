@@ -49,20 +49,23 @@ async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
   const prompt = ChatPromptTemplate.fromMessages([
     [
       'user',
-      'Summarize this GitHub repository from this readme file content:\n\n{readme}',
+      `Summarize this GitHub repository from this readme file content. Respond with valid JSON only, in this exact format:
+{"summary": "string", "cool_fact": ["string", "string"]}
+
+Readme content:
+
+{readme}`,
     ],
   ]);
   const messages = await prompt.invoke({ readme });
-  //const llm = getChatModel().withStructuredOutput(GitHubSummarySchema);
-  
-  // Workaround for TS "Type instantiation is excessively deep" with LangChain  
-  //const llm = getChatModel().withStructuredOutput(GitHubSummarySchema) as ReturnType<typeof getChatModel>;
-  const llm = getChatModel().withStructuredOutput(GitHubSummarySchema) as any;
-  const raw = await llm.invoke(messages);
-  if (raw && typeof raw === 'object' && 'parsed' in raw) {
-    return (raw as { parsed: GitHubSummary }).parsed;
-  }
-  return raw as GitHubSummary;
+  const model = getChatModel();
+  const response = await model.invoke(messages);
+  const text =
+    typeof response.content === 'string'
+      ? response.content
+      : (response.content as { text?: string }[])?.[0]?.text ?? '';
+  const json = text.replace(/```json\n?|\n?```/g, '').trim();
+  return GitHubSummarySchema.parse(JSON.parse(json));
 }
 
 export async function POST(req: NextRequest) {
