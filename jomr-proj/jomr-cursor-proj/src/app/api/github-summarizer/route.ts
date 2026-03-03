@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 const GitHubSummarySchema = z.object({
   summary: z.string().describe('Concise summary of the GitHub repository based on the README'),
-  cool_fact: z.array(z.string()).describe('List of interesting or surprising facts about the repository'),
+  cool_fact: z.array(z.string()).describe('List of 2 interesting facts about the repository'),
 });
 
 type GitHubSummary = z.infer<typeof GitHubSummarySchema>;
@@ -54,7 +54,9 @@ async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
   ]);
   const messages = await prompt.invoke({ readme });
   //const llm = getChatModel().withStructuredOutput(GitHubSummarySchema);
+  
   // Workaround for TS "Type instantiation is excessively deep" with LangChain  
+  //const llm = getChatModel().withStructuredOutput(GitHubSummarySchema) as ReturnType<typeof getChatModel>;
   const llm = getChatModel().withStructuredOutput(GitHubSummarySchema) as any;
   const raw = await llm.invoke(messages);
   if (raw && typeof raw === 'object' && 'parsed' in raw) {
