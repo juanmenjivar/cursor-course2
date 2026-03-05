@@ -25,7 +25,7 @@ function getChatModel(): ChatGoogle {
       model: GEMINI_MODEL,
       apiKey,
       maxOutputTokens: 2048,
-      temperature: 0.7,
+      temperature: 0,
     });
   }
 
