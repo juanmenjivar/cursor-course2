@@ -17,9 +17,9 @@ services:
       - WATCHPACK_POLLING=true
       - PORT=3000
       - HOSTNAME=0.0.0.0
-    # Env: put .env.local in project root, or use src/app/.env.local (change path below if needed)
+    # Env: .env.local in project root (Next.js loads from cwd; Docker injects via env_file)
     env_file:
-      - ./src/app/.env.local
+      - .env.local
     command: yarn dev -- -H 0.0.0.0
     restart: unless-stopped
     stdin_open: true

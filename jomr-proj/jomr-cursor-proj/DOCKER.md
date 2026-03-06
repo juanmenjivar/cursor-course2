@@ -28,7 +28,7 @@ This writes the updated `yarn.lock` to your project. Commit it before building.
 
 ### 1. Set Up Environment Variables
 
-Docker Compose loads env from **`./src/app/.env.local`** by default. Create that file (or put `.env.local` in the project root and change `env_file` in `docker-compose.yml` / `docker-compose.dev.yml` to `- .env.local`).
+Docker Compose loads env from **`.env.local`** in the project root. Create that file with your credentials.
 
 Required contents:
 
@@ -230,7 +230,7 @@ Then open http://localhost:3001
 
 **Cause:** In Docker Compose, the `environment` section **overrides** `env_file`. If you set `NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}` in `environment`, that value is interpolated on the **host** (where it’s usually unset), so the container gets empty values and overwrites the ones from `env_file`.
 
-**Fix:** The compose files no longer set `NEXT_PUBLIC_*` in `environment`; they come only from `env_file` (e.g. `./src/app/.env.local`). Ensure that file exists and contains the two variables. Restart the stack after changing it:
+**Fix:** The compose files no longer set `NEXT_PUBLIC_*` in `environment`; they come only from `env_file` (`.env.local` in project root). Ensure that file exists and contains the two variables. Restart the stack after changing it:
 
 ```bash
 docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compose.dev.yml up --build
@@ -238,10 +238,11 @@ docker-compose -f docker-compose.dev.yml down && docker-compose -f docker-compos
 
 ### Missing Supabase Environment Variables / "env_file not found"
 
-Compose uses **`./src/app/.env.local`** by default. If your file is in the project root (`.env.local`), either:
+Compose uses **`.env.local`** in the project root. Create that file (or copy from `src/app/.env.local` if you had it there):
 
-- Copy it: `cp .env.local src/app/.env.local`, or  
-- Edit `docker-compose.yml` and `docker-compose.dev.yml`: set `env_file` to `- .env.local` instead of `- ./src/app/.env.local`.
+```powershell
+copy src\app\.env.local .env.local
+```
 
 Ensure the file contains:
 

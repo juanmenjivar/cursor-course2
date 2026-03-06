@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Enable standalone output for Docker
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com', pathname: '**' },
+    ],
+  },
 };
 
 export default nextConfig;

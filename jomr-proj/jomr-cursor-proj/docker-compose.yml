@@ -12,9 +12,9 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-    # Env: put .env.local in project root, or use src/app/.env.local (change path below if needed)
+    # Env: .env.local in project root
     env_file:
-      - ./src/app/.env.local
+      - .env.local
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
