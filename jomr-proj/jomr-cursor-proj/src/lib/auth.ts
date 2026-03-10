@@ -16,6 +16,7 @@ export const authOptions: NextAuthOptions = {
       // Add/update user in Supabase on sign-in (first login or profile changes)
       try {
         const supabase = createServerClient();
+        // Cast to never: manual Database types can cause upsert() to expect 'never' (same as api-keys.ts)
         await supabase.from("users").upsert(
           {
             id: user.id!,
@@ -23,7 +24,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email ?? null,
             image: user.image ?? null,
             updated_at: new Date().toISOString(),
-          },
+          } as never,
           { onConflict: "id" }
         );
       } catch (err) {
