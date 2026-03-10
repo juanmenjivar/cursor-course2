@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { createServerClient } from "./supabase";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -10,8 +11,27 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-      // Allow sign-in (you can add email domain restrictions here)
-      return !!user?.email;
+      if (!user?.email) return false;
+
+      // Add/update user in Supabase on sign-in (first login or profile changes)
+      try {
+        const supabase = createServerClient();
+        await supabase.from("users").upsert(
+          {
+            id: user.id!,
+            name: user.name ?? null,
+            email: user.email ?? null,
+            image: user.image ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+      } catch (err) {
+        console.error("Failed to sync user to Supabase:", err);
+        // Don't block sign-in if Supabase sync fails
+      }
+
+      return true;
     },
     async session({ session, token }) {
       if (session.user) {
