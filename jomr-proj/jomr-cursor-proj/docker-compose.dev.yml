@@ -19,6 +19,8 @@ services:
       - HOSTNAME=0.0.0.0
       # NextAuth: URL the browser uses to access the app (required for session fetch in Docker)
       - NEXTAUTH_URL=http://localhost:3000
+      # NextAuth: Trust Host header (required for Docker/proxies; use env var since trustHost not in v4 types)
+      - AUTH_TRUST_HOST=true
     # Env: .env.local in project root (Next.js loads from cwd; Docker injects via env_file)
     env_file:
       - .env.local
