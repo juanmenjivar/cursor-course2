@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { createServerClient } from "./supabase";
 
 export const authOptions: NextAuthOptions = {
+  trustHost: true, // Required for Docker, proxies, and dynamic hosts
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

@@ -17,10 +17,12 @@ services:
       - WATCHPACK_POLLING=true
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      # NextAuth: URL the browser uses to access the app (required for session fetch in Docker)
+      - NEXTAUTH_URL=http://localhost:3000
     # Env: .env.local in project root (Next.js loads from cwd; Docker injects via env_file)
     env_file:
       - .env.local
-    command: yarn dev -- -H 0.0.0.0
+    command: sh -c "yarn install && yarn dev"
     restart: unless-stopped
     stdin_open: true
     tty: true
