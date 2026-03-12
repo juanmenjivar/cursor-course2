@@ -31,22 +31,22 @@ export function ValidationNotification({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-[100] flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-opacity ${
+      className={`fixed top-4 right-4 left-4 z-[100] flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-opacity sm:left-auto sm:w-auto ${
         isSuccess
           ? 'border-green-500/50 bg-green-500/20 text-green-400'
           : 'border-red-500/50 bg-red-500/20 text-red-400'
       }`}
     >
-      <span className="font-semibold">{MESSAGES[status]}</span>
+      <span className="min-w-0 flex-1 font-semibold">{MESSAGES[status]}</span>
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className={`rounded p-1 transition-colors ${
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
             isSuccess ? 'hover:bg-green-500/30' : 'hover:bg-red-500/30'
           }`}
           aria-label="Dismiss"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

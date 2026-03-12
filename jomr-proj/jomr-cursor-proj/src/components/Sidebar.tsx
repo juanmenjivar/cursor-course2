@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface NavItem {
   href: string;
@@ -100,14 +101,10 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
-  return (
-    <div
-      className={`flex-shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
-        isOpen ? 'w-56' : 'w-0'
-      }`}
-    >
-      <aside className="flex h-full w-56 flex-col border-r border-[#333] bg-[#0a0a0a]">
+  const asideContent = (
+    <aside className="flex h-full w-56 flex-col border-r border-[#333] bg-[#0a0a0a] md:min-w-56">
       {/* Branding + Toggle */}
       <div className="flex items-center justify-between border-b border-[#333] px-4 py-5">
         <Link href="/" className="text-xl font-bold text-white">
@@ -196,6 +193,34 @@ export default function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
         </div>
       </div>
     </aside>
+  );
+
+  if (isMobile) {
+    if (!isOpen) return null;
+    return (
+      <>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={onToggle}
+          onKeyDown={(e) => e.key === 'Escape' && onToggle?.()}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          aria-label="Close menu"
+        />
+        <div className="fixed inset-y-0 left-0 z-50 w-56 md:hidden">
+          {asideContent}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div
+      className={`flex-shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
+        isOpen ? 'w-56' : 'w-0'
+      }`}
+    >
+      {asideContent}
     </div>
   );
 }
@@ -205,7 +230,7 @@ export function SidebarToggle({ isOpen, onToggle }: { isOpen: boolean; onToggle:
     <button
       type="button"
       onClick={onToggle}
-      className="rounded-lg border border-[#333] bg-[#1a1a1a] p-2 text-[#888] transition-colors hover:bg-[#222] hover:text-white"
+      className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#333] bg-[#1a1a1a] text-[#888] transition-colors hover:bg-[#222] hover:text-white"
       aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
     >
       <MenuIcon className="h-5 w-5" />

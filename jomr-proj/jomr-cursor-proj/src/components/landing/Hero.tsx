@@ -43,21 +43,21 @@ export function Hero() {
         {/* Mock repo card */}
         <div className="mx-auto mt-16 max-w-4xl">
           <div className="rounded-xl border border-border bg-card p-6 shadow-2xl shadow-black/50">
-            <div className="flex items-center justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
                   <span className="text-lg font-bold text-foreground">⚛️</span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground truncate">
                     facebook/react
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1">
                     The library for web and native user interfaces
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <div className="flex items-center gap-1.5">
                   <Star className="h-4 w-4 text-yellow-500" />
                   <span className="text-sm font-medium text-foreground">

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -9,8 +10,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -107,7 +113,7 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
             <input
               type="text"
               value={input}
@@ -119,7 +125,7 @@ export default function ChatPage() {
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="rounded-lg bg-[#333] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#444] disabled:opacity-50 disabled:hover:bg-[#333]"
+              className="min-h-[44px] rounded-lg bg-[#333] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#444] disabled:opacity-50 disabled:hover:bg-[#333]"
             >
               Send
             </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   fetchAllApiKeys,
   createApiKey,
@@ -34,7 +35,12 @@ export function useApiKeysDashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showTableSettings, setShowTableSettings] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [isMobile]);
 
   const fetchData = useCallback(async () => {
     try {
