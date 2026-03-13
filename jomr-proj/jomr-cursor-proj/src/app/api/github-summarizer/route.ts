@@ -7,8 +7,11 @@ import { validateApiKey } from '@/lib/api-keys';
 export const runtime = 'nodejs';
 
 const GitHubSummarySchema = z.object({
-  summary: z.string().describe('Concise summary of the GitHub repository based on the README'),
-  cool_fact: z.array(z.string()).describe('List of 2 interesting facts about the repository'),
+  summary: z.string().describe('~500-word summary of the GitHub repository based on the README'),
+  cool_fact: z
+    .array(z.string())
+    .min(5)
+    .describe('List of at least 5 interesting/cool facts about the repository'),
 });
 
 type GitHubSummary = z.infer<typeof GitHubSummarySchema>;
@@ -49,8 +52,8 @@ async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
   const prompt = ChatPromptTemplate.fromMessages([
     [
       'user',
-      `Summarize this GitHub repository from this readme file content. Respond with valid JSON only, in this exact format:
-{"summary": "string", "cool_fact": ["string", "string"]}
+      `Summarize this GitHub repository from this readme file content using Gemini AI. Provide a detailed summary of approximately 250 words and exactly 5 cool/interesting facts about the repository. IMPORTANT: Escape any quotes inside strings with backslash (e.g. \\"). Respond with valid JSON only, no markdown, in this exact format:
+{{"summary": "your summary here", "cool_fact": ["fact1", "fact2", "fact3", "fact4", "fact5"]}}
 
 Readme content:
 
@@ -64,8 +67,10 @@ Readme content:
     typeof response.content === 'string'
       ? response.content
       : (response.content as { text?: string }[])?.[0]?.text ?? '';
-  const json = text.replace(/```json\n?|\n?```/g, '').trim();
-  return GitHubSummarySchema.parse(JSON.parse(json));
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const json = jsonMatch ? jsonMatch[0] : text.replace(/```json\n?|\n?```/g, '').trim();
+  const parsed = JSON.parse(json);
+  return GitHubSummarySchema.parse(parsed);
 }
 
 export async function POST(req: NextRequest) {
@@ -114,19 +119,23 @@ export async function POST(req: NextRequest) {
     }
 
     let result: GitHubSummary | null = null;
+    let summaryError: string | null = null;
     try {
       result = await summarizeReadme(readme.slice(0, 10000));
-    } catch {
-      // LLM failed (e.g. leaked key); result stays null
+    } catch (err) {
+      summaryError = err instanceof Error ? err.message : String(err);
     }
 
-    return NextResponse.json({
+    const response: Record<string, unknown> = {
       owner: repoInfo.owner,
       repo: repoInfo.repo,
-      readme,
       summary: result?.summary ?? null,
       cool_fact: result?.cool_fact ?? null,
-    });
+    };
+    if (summaryError) {
+      response.summary_error = summaryError;
+    }
+    return NextResponse.json(response);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: msg }, { status: 500 });

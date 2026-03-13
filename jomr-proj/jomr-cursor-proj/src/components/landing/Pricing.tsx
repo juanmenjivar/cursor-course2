@@ -40,10 +40,11 @@ export function Pricing() {
       ],
       cta: "Start free trial",
       ctaAction: "signin" as const,
-      highlighted: true,
+      highlighted: false,
+      comingSoon: true,
     },
     {
-      name: "Team",
+      name: "Enterprise",
       price: "$49",
       period: "per month",
       description: "For teams tracking multiple projects.",
@@ -60,6 +61,7 @@ export function Pricing() {
       ctaAction: "contact" as const,
       ctaHref: "mailto:sales@github-analyzer.example.com",
       highlighted: false,
+      comingSoon: true,
     },
   ];
 
@@ -88,6 +90,13 @@ export function Pricing() {
                   : "border-border bg-card"
               }`}
             >
+              {plan.comingSoon && (
+                <div className="absolute right-4 top-4">
+                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+                    Coming Soon
+                  </span>
+                </div>
+              )}
               {plan.highlighted && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
@@ -127,7 +136,14 @@ export function Pricing() {
               </ul>
 
               <div className="mt-8">
-                {plan.ctaAction === "link" && plan.ctaHref ? (
+                {plan.comingSoon ? (
+                  <Button
+                    disabled
+                    className="w-full cursor-not-allowed bg-zinc-600 text-white hover:bg-zinc-600"
+                  >
+                    Coming Soon
+                  </Button>
+                ) : plan.ctaAction === "link" && plan.ctaHref ? (
                   <Button
                     asChild
                     className={`w-full ${
