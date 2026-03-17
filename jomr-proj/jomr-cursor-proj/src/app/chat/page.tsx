@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Sidebar from '@/components/Sidebar';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
 export default function ChatPage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated' && !!session?.user;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +32,7 @@ export default function ChatPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!isAuthenticated || !input.trim() || loading) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -39,13 +43,15 @@ export default function ChatPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: userMessage }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error ?? 'Request failed');
+        const msg = res.status === 401 ? 'Please sign in to use AI Chat.' : (data.error ?? 'Request failed');
+        throw new Error(msg);
       }
 
       setMessages((prev) => [
@@ -81,10 +87,18 @@ export default function ChatPage() {
             </button>
           </div>
 
+          {!isAuthenticated && (
+            <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              Please sign in to use AI Chat.
+            </div>
+          )}
+
           <div className="mb-4 flex-1 space-y-4 overflow-y-auto rounded-lg border border-[#333] bg-[#111] p-4 min-h-[400px]">
             {messages.length === 0 && (
               <p className="text-center text-[#666]">
-                Send a message to start chatting with Gemini.
+                {isAuthenticated
+                  ? 'Send a message to start chatting with Gemini.'
+                  : 'Sign in to chat with Gemini.'}
               </p>
             )}
             {messages.map((m, i) => (
@@ -118,14 +132,14 @@ export default function ChatPage() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a message…"
-              disabled={loading}
+              placeholder={isAuthenticated ? 'Type a message…' : 'Sign in to chat…'}
+              disabled={loading || !isAuthenticated}
               className="flex-1 rounded-lg border border-[#333] bg-[#111] px-4 py-3 text-white placeholder-[#666] focus:border-[#555] focus:outline-none focus:ring-1 focus:ring-[#555] disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={loading || !input.trim()}
-              className="min-h-[44px] rounded-lg bg-[#333] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#444] disabled:opacity-50 disabled:hover:bg-[#333]"
+              disabled={loading || !isAuthenticated || !input.trim()}
+              className="min-h-[44px] rounded-lg bg-[#333] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#444] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#333]"
             >
               Send
             </button>

@@ -17,6 +17,7 @@ interface ApiKeysTableProps {
   onEdit: (key: ApiKey) => void;
   onToggleStatus: (id: string, status: 'active' | 'inactive') => void;
   onDelete: (key: ApiKey) => void;
+  actionsDisabled?: boolean;
 }
 
 export function ApiKeysTable({
@@ -33,6 +34,7 @@ export function ApiKeysTable({
   onEdit,
   onToggleStatus,
   onDelete,
+  actionsDisabled = false,
 }: ApiKeysTableProps) {
   return (
     <div>
@@ -46,7 +48,8 @@ export function ApiKeysTable({
                 type="checkbox"
                 checked={allSelected}
                 onChange={onToggleSelectAll}
-                className="h-4 w-4 rounded border-[#333] bg-[#0a0a0a] text-[#3b82f6] focus:ring-[#3b82f6]"
+                disabled={actionsDisabled}
+                className="h-4 w-4 rounded border-[#333] bg-[#0a0a0a] text-[#3b82f6] focus:ring-[#3b82f6] disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </th>
             <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#888]">
@@ -83,7 +86,11 @@ export function ApiKeysTable({
           ) : apiKeys.length === 0 ? (
             <tr>
               <td colSpan={7} className="px-4 py-12 text-center text-[#888]">
-                {searchQuery ? 'No API keys found matching your search.' : 'No API keys yet. Create your first one!'}
+                {actionsDisabled
+                  ? 'Sign in to view and manage API keys.'
+                  : searchQuery
+                    ? 'No API keys found matching your search.'
+                    : 'No API keys yet. Create your first one!'}
               </td>
             </tr>
           ) : (
@@ -94,7 +101,8 @@ export function ApiKeysTable({
                     type="checkbox"
                     checked={selectedKeys.has(apiKey.id)}
                     onChange={() => onToggleSelectKey(apiKey.id)}
-                    className="h-4 w-4 rounded border-[#333] bg-[#0a0a0a] text-[#3b82f6] focus:ring-[#3b82f6]"
+                    disabled={actionsDisabled}
+                    className="h-4 w-4 rounded border-[#333] bg-[#0a0a0a] text-[#3b82f6] focus:ring-[#3b82f6] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </td>
                 <td className="px-2 sm:px-4 py-4">
@@ -111,8 +119,10 @@ export function ApiKeysTable({
                           {showKey[apiKey.id] ? apiKey.key : '•'.repeat(Math.min(20, apiKey.key.length))}
                         </code>
                         <button
+                          type="button"
                           onClick={() => onToggleShowKey(apiKey.id)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#333] hover:text-white"
+                          disabled={actionsDisabled}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#333] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           title={showKey[apiKey.id] ? 'Hide' : 'Show'}
                           aria-label={showKey[apiKey.id] ? 'Hide key' : 'Show key'}
                         >
@@ -128,8 +138,10 @@ export function ApiKeysTable({
                           )}
                         </button>
                         <button
+                          type="button"
                           onClick={() => onCopyKey(apiKey.key)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#333] hover:text-white"
+                          disabled={actionsDisabled}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#888] transition-colors hover:bg-[#333] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           title="Copy"
                           aria-label="Copy key"
                         >
@@ -143,11 +155,13 @@ export function ApiKeysTable({
                 </td>
                 <td className="px-2 sm:px-4 py-4 hidden md:table-cell">
                   <button
+                    type="button"
                     onClick={() => onToggleStatus(apiKey.id, apiKey.status || 'active')}
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors hover:opacity-80 ${
+                    disabled={actionsDisabled}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 ${
                       apiKey.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                     }`}
-                    title={`Click to ${apiKey.status === 'active' ? 'deactivate' : 'activate'}`}
+                    title={actionsDisabled ? 'Sign in to change status' : `Click to ${apiKey.status === 'active' ? 'deactivate' : 'activate'}`}
                   >
                     {apiKey.status === 'active' ? 'Active' : 'Inactive'}
                   </button>
@@ -161,8 +175,10 @@ export function ApiKeysTable({
                 <td className="px-2 sm:px-4 py-4">
                   <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                     <button
+                      type="button"
                       onClick={() => onEdit(apiKey)}
-                      className="flex items-center gap-1 rounded-lg bg-[#3b82f6] px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-white hover:bg-[#2563eb] transition-colors"
+                      disabled={actionsDisabled}
+                      className="flex items-center gap-1 rounded-lg bg-[#3b82f6] px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-white hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3b82f6]"
                     >
                       <svg className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -170,8 +186,10 @@ export function ApiKeysTable({
                       <span className="hidden sm:inline">Edit</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => onToggleShowKey(apiKey.id)}
-                      className="flex items-center gap-1 rounded-lg bg-[#3b82f6] px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-white hover:bg-[#2563eb] transition-colors"
+                      disabled={actionsDisabled}
+                      className="flex items-center gap-1 rounded-lg bg-[#3b82f6] px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-white hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3b82f6]"
                     >
                       <svg className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -183,8 +201,10 @@ export function ApiKeysTable({
                 </td>
                 <td className="px-2 sm:px-4 py-4">
                   <button
+                    type="button"
                     onClick={() => onDelete(apiKey)}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                    disabled={actionsDisabled}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     aria-label="Delete"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { getChatModel } from '@/lib/llm';
-import { validateApiKey } from '@/lib/api-keys';
+import { validateApiKey } from '@/lib/api-keys-server'
 
 export const runtime = 'nodejs';
 

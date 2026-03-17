@@ -3,18 +3,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import Sidebar, { SidebarToggle } from '@/components/Sidebar';
 
 const PLAYGROUND_KEY_STORAGE = 'playground_api_key';
 
 export default function PlaygroundPage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated' && !!session?.user;
   const [apiKey, setApiKey] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiKey.trim()) return;
+    if (!isAuthenticated || !apiKey.trim()) return;
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(PLAYGROUND_KEY_STORAGE, apiKey.trim());
     }
@@ -38,6 +41,12 @@ export default function PlaygroundPage() {
             Enter an API key to validate it against your stored keys.
           </p>
 
+          {!isAuthenticated && (
+            <div className="mb-6 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              Please sign in to validate API keys.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="rounded-lg border border-[#333] bg-[#1a1a1a] p-6">
             <label className="block text-sm font-medium text-[#888] mb-2">
               API Key
@@ -47,12 +56,14 @@ export default function PlaygroundPage() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="jomr-..."
-              className="mb-4 w-full rounded-lg border border-[#333] bg-[#0a0a0a] px-3 py-2.5 font-mono text-sm text-white placeholder:text-[#666] focus:border-[#3b82f6] focus:outline-none focus:ring-1 focus:ring-[#3b82f6]"
+              className="mb-4 w-full rounded-lg border border-[#333] bg-[#0a0a0a] px-3 py-2.5 font-mono text-sm text-white placeholder:text-[#666] focus:border-[#3b82f6] focus:outline-none focus:ring-1 focus:ring-[#3b82f6] disabled:opacity-50"
               required
+              disabled={!isAuthenticated}
             />
             <button
               type="submit"
-              className="rounded-lg bg-[#3b82f6] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2563eb] transition-colors"
+              disabled={!isAuthenticated}
+              className="rounded-lg bg-[#3b82f6] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3b82f6]"
             >
               Validate Key
             </button>

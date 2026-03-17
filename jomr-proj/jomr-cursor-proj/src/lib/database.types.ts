@@ -51,6 +51,7 @@ export type Database = {
       users: {
         Row: {
           id: string;
+          uuid: string;
           name: string | null;
           email: string | null;
           image: string | null;
@@ -59,6 +60,7 @@ export type Database = {
         };
         Insert: {
           id: string;
+          uuid?: string;
           name?: string | null;
           email?: string | null;
           image?: string | null;
@@ -67,6 +69,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          uuid?: string;
           name?: string | null;
           email?: string | null;
           image?: string | null;

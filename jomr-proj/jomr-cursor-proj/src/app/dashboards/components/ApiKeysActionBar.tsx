@@ -10,6 +10,7 @@ interface ApiKeysActionBarProps {
   onToggleActions: () => void;
   selectedCount: number;
   onBulkDelete: () => void;
+  actionsDisabled?: boolean;
 }
 
 export function ApiKeysActionBar({
@@ -22,6 +23,7 @@ export function ApiKeysActionBar({
   onToggleActions,
   selectedCount,
   onBulkDelete,
+  actionsDisabled = false,
 }: ApiKeysActionBarProps) {
   return (
     <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -44,8 +46,10 @@ export function ApiKeysActionBar({
       </div>
       <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
         <button
+          type="button"
           onClick={onAddClick}
-          className="flex items-center gap-2 rounded-lg bg-[#3b82f6] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-[#2563eb] transition-colors flex-1 sm:flex-initial"
+          disabled={actionsDisabled}
+          className="flex items-center gap-2 rounded-lg bg-[#3b82f6] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-[#2563eb] transition-colors flex-1 sm:flex-initial disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3b82f6]"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -65,8 +69,10 @@ export function ApiKeysActionBar({
         </button>
         <div className="relative">
           <button
+            type="button"
             onClick={onToggleActions}
-            className="flex items-center gap-1 sm:gap-2 rounded-lg border border-[#333] bg-[#1a1a1a] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-white hover:bg-[#222] transition-colors"
+            disabled={actionsDisabled}
+            className="flex items-center gap-1 sm:gap-2 rounded-lg border border-[#333] bg-[#1a1a1a] px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-white hover:bg-[#222] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="hidden sm:inline">Actions</span>
             <span className="sm:hidden">More</span>

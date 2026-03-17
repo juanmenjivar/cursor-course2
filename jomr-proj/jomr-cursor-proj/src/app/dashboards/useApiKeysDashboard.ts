@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   fetchAllApiKeys,
@@ -15,8 +16,12 @@ import { filterApiKeys, paginate } from './utils';
 import type { ApiKey, DeleteConfirmState } from './types';
 
 const ITEMS_PER_PAGE = 10;
+const UNAUTH_MESSAGE = 'Please sign in to view and manage API keys';
 
 export function useApiKeysDashboard() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated' && !!session?.user;
+
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [filteredKeys, setFilteredKeys] = useState<ApiKey[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +48,7 @@ export function useApiKeysDashboard() {
   }, [isMobile]);
 
   const fetchData = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setLoading(true);
       setError(null);
@@ -55,11 +61,19 @@ export function useApiKeysDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setApiKeys([]);
+      setFilteredKeys([]);
+      setError(UNAUTH_MESSAGE);
+      return;
+    }
+    setError(null);
     fetchData();
-  }, [fetchData]);
+  }, [isAuthenticated, fetchData]);
 
   useEffect(() => {
     const filtered = filterApiKeys(apiKeys, searchQuery);
@@ -74,6 +88,7 @@ export function useApiKeysDashboard() {
   );
 
   const handleCreate = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setError(null);
       await createApiKey({
@@ -88,10 +103,10 @@ export function useApiKeysDashboard() {
       console.error('Error creating API key:', err);
       setError(err instanceof Error ? err.message : 'Failed to create API key');
     }
-  }, [formData, fetchData]);
+  }, [isAuthenticated, formData, fetchData]);
 
   const handleUpdate = useCallback(async () => {
-    if (!editingKey) return;
+    if (!isAuthenticated || !editingKey) return;
     try {
       setError(null);
       await updateApiKey(editingKey.id, {
@@ -106,10 +121,11 @@ export function useApiKeysDashboard() {
       console.error('Error updating API key:', err);
       setError(err instanceof Error ? err.message : 'Failed to update API key');
     }
-  }, [editingKey, formData, fetchData]);
+  }, [isAuthenticated, editingKey, formData, fetchData]);
 
   const handleDelete = useCallback(
     async (id: string) => {
+      if (!isAuthenticated) return;
       try {
         setError(null);
         await deleteApiKey(id);
@@ -125,11 +141,11 @@ export function useApiKeysDashboard() {
         setError(err instanceof Error ? err.message : 'Failed to delete API key');
       }
     },
-    [fetchData]
+    [isAuthenticated, fetchData]
   );
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedKeys.size === 0) return;
+    if (!isAuthenticated || selectedKeys.size === 0) return;
     try {
       setError(null);
       await deleteApiKeys(Array.from(selectedKeys));
@@ -140,10 +156,11 @@ export function useApiKeysDashboard() {
       console.error('Error deleting API keys:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete API keys');
     }
-  }, [selectedKeys, fetchData]);
+  }, [isAuthenticated, selectedKeys, fetchData]);
 
   const handleToggleStatus = useCallback(
     async (id: string, currentStatus: 'active' | 'inactive') => {
+      if (!isAuthenticated) return;
       try {
         setError(null);
         await toggleApiKeyStatus(id, currentStatus);
@@ -153,30 +170,32 @@ export function useApiKeysDashboard() {
         setError(err instanceof Error ? err.message : 'Failed to toggle status');
       }
     },
-    [fetchData]
+    [isAuthenticated, fetchData]
   );
 
   const openCreateModal = useCallback(() => {
+    if (!isAuthenticated) return;
     setEditingKey(null);
     setFormData({ name: '', key: '' });
     setIsModalOpen(true);
-  }, []);
+  }, [isAuthenticated]);
 
   const openEditModal = useCallback((key: ApiKey) => {
+    if (!isAuthenticated) return;
     setEditingKey(key);
     setFormData({ name: key.name, key: key.key });
     setIsModalOpen(true);
-  }, []);
+  }, [isAuthenticated]);
 
   const openDeleteConfirm = useCallback((key: ApiKey) => {
+    if (!isAuthenticated) return;
     setDeleteConfirm({ type: 'single', key });
-  }, []);
+  }, [isAuthenticated]);
 
   const openBulkDeleteConfirm = useCallback(() => {
-    if (selectedKeys.size > 0) {
-      setDeleteConfirm({ type: 'bulk', count: selectedKeys.size });
-    }
-  }, [selectedKeys.size]);
+    if (!isAuthenticated || selectedKeys.size <= 0) return;
+    setDeleteConfirm({ type: 'bulk', count: selectedKeys.size });
+  }, [isAuthenticated, selectedKeys.size]);
 
   const toggleShowKey = useCallback((id: string) => {
     setShowKey((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -204,6 +223,7 @@ export function useApiKeysDashboard() {
   }, []);
 
   return {
+    isAuthenticated,
     apiKeys,
     filteredKeys,
     paginatedKeys,

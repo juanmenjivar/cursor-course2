@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()) NOT NULL,
   last_used TIMESTAMP WITH TIME ZONE,
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
-  user_id UUID, -- Optional: if you want to track which user created the key
+  user_id UUID REFERENCES users(uuid) ON DELETE CASCADE, -- Run 003_users_add_uuid.sql then 004_api_keys_user_id_uuid.sql
   created_at_ts TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -40,8 +40,10 @@ CREATE TRIGGER update_api_keys_updated_at BEFORE UPDATE ON api_keys
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Users table (synced from NextAuth on first login)
+-- id = provider id (TEXT); uuid = internal UUID for api_keys.user_id etc.
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
+  uuid UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,
   name TEXT,
   email TEXT,
   image TEXT,

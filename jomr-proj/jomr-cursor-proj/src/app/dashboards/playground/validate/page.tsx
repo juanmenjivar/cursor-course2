@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import Sidebar, { SidebarToggle } from '@/components/Sidebar';
 import { ValidationNotification } from '@/components/ValidationNotification';
 import { validateApiKey } from '@/lib/api-keys';
@@ -10,12 +11,19 @@ import { validateApiKey } from '@/lib/api-keys';
 const PLAYGROUND_KEY_STORAGE = 'playground_api_key';
 
 export default function ValidatePage() {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated' && !!session?.user;
   const [validationStatus, setValidationStatus] = useState<'valid' | 'invalid' | 'disabled' | null>(null);
   const [showNotification, setShowNotification] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/dashboards/playground');
+      return;
+    }
+    if (status !== 'authenticated') return;
     const key = typeof window !== 'undefined' ? sessionStorage.getItem(PLAYGROUND_KEY_STORAGE) : null;
     if (!key) {
       router.replace('/dashboards/playground');
@@ -26,7 +34,7 @@ export default function ValidatePage() {
       setValidationStatus(result);
       sessionStorage.removeItem(PLAYGROUND_KEY_STORAGE);
     });
-  }, [router]);
+  }, [router, status]);
 
   return (
     <div className="relative flex min-h-screen">

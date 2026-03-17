@@ -14,6 +14,7 @@ import {
 
 export default function DashboardsPage() {
   const {
+    isAuthenticated,
     apiKeys,
     filteredKeys,
     paginatedKeys,
@@ -94,6 +95,7 @@ export default function DashboardsPage() {
             onToggleActions={() => setShowActions((s) => !s)}
             selectedCount={selectedKeys.size}
             onBulkDelete={openBulkDeleteConfirm}
+            actionsDisabled={!isAuthenticated}
           />
 
           <ApiKeysTable
@@ -110,6 +112,7 @@ export default function DashboardsPage() {
             onEdit={openEditModal}
             onToggleStatus={handleToggleStatus}
             onDelete={openDeleteConfirm}
+            actionsDisabled={!isAuthenticated}
           />
 
           <Pagination
