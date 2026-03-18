@@ -90,7 +90,7 @@ Readme content:
     const retryPrompt = ChatPromptTemplate.fromMessages([
       [
         'user',
-        `Return valid JSON only. Summarize this repo readme in under 200 words. List exactly 5 short facts (one phrase each). Format: {"summary":"...","cool_fact":["fact1","fact2","fact3","fact4","fact5"]}. No markdown, no extra text.
+        `Return valid JSON only. Summarize this repo readme in under 200 words. List exactly 5 short facts (one phrase each). Format: {{"summary":"...","cool_fact":["fact1","fact2","fact3","fact4","fact5"]}}. No markdown, no extra text.
 
 Readme:
 
