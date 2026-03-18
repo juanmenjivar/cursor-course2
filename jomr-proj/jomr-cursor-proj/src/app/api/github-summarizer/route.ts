@@ -68,22 +68,45 @@ Readme content:
   const messages = await prompt.invoke({ readme });
   const model = getChatModel();
 
-  try {
-    const structuredModel = model.withStructuredOutput(GitHubSummarySchema);
-    const parsed = await structuredModel.invoke(messages);
-    return GitHubSummarySchema.parse(parsed);
-  } catch {
-    // Fallback: raw JSON parse when structured output is unavailable or fails
-    const response = await model.invoke(messages);
-    const text =
-      typeof response.content === 'string'
-        ? response.content
-        : (response.content as { text?: string }[])?.[0]?.text ?? '';
-    const jsonStr = extractJsonFromText(text);
+  const attemptParse = (rawText: string): GitHubSummary | null => {
+    const jsonStr = extractJsonFromText(rawText);
     const repaired = repairJsonString(jsonStr);
-    const parsed = JSON.parse(repaired);
-    return GitHubSummarySchema.parse(parsed);
+    try {
+      const parsed = JSON.parse(repaired);
+      return GitHubSummarySchema.parse(parsed) as GitHubSummary;
+    } catch {
+      return null;
+    }
+  };
+
+  const response = await model.invoke(messages);
+  const text =
+    typeof response.content === 'string'
+      ? response.content
+      : (response.content as { text?: string }[])?.[0]?.text ?? '';
+  let result = attemptParse(text);
+
+  if (!result) {
+    const retryPrompt = ChatPromptTemplate.fromMessages([
+      [
+        'user',
+        `Return valid JSON only. Summarize this repo readme in under 200 words. List exactly 5 short facts (one phrase each). Format: {"summary":"...","cool_fact":["fact1","fact2","fact3","fact4","fact5"]}. No markdown, no extra text.
+
+Readme:
+
+{readme}`,
+      ],
+    ]);
+    const retryMessages = await retryPrompt.invoke({ readme: readme.slice(0, 5000) });
+    const retryResponse = await model.invoke(retryMessages);
+    const retryText =
+      typeof retryResponse.content === 'string'
+        ? retryResponse.content
+        : (retryResponse.content as { text?: string }[])?.[0]?.text ?? '';
+    result = attemptParse(retryText);
   }
+
+  return result;
 }
 
 /**
@@ -101,7 +124,7 @@ function repairJsonString(jsonStr: string): string {
   const posMatch = jsonStr.match(/position (\d+)/);
   const cut = posMatch ? Math.min(Number(posMatch[1]), jsonStr.length) : jsonStr.length;
   let s = jsonStr.slice(0, cut);
-  const inDoubleQuote = (s.match(/"([^"\\]|\\.)*$/s) ?? [])[0];
+  const inDoubleQuote = (s.match(/"([^"\\]|\\.)*$/) ?? [])[0];
   if (inDoubleQuote) s = s.slice(0, s.length - inDoubleQuote.length) + '"';
   let openBracket = 0;
   let openBrace = 0;
