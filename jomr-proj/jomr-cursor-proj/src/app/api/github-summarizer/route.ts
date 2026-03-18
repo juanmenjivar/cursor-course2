@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { getChatModel } from '@/lib/llm';
-import { validateApiKey } from '@/lib/api-keys-server'
+import { validateApiKey, getApiKeyUsageLimit, incrementApiKeyUsage } from '@/lib/api-keys-server'
 
 export const runtime = 'nodejs';
 
@@ -48,12 +48,17 @@ async function fetchReadmeFromGitHub(owner: string, repo: string): Promise<strin
   return null;
 }
 
+function extractJsonFromText(text: string): string {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) return jsonMatch[0];
+  return text.replace(/```json\n?|\n?```/g, '').trim();
+}
+
 async function summarizeReadme(readme: string): Promise<GitHubSummary | null> {
   const prompt = ChatPromptTemplate.fromMessages([
     [
       'user',
-      `Summarize this GitHub repository from this readme file content using Gemini AI. Provide a detailed summary of approximately 250 words and exactly 5 cool/interesting facts about the repository. IMPORTANT: Escape any quotes inside strings with backslash (e.g. \\"). Respond with valid JSON only, no markdown, in this exact format:
-{{"summary": "your summary here", "cool_fact": ["fact1", "fact2", "fact3", "fact4", "fact5"]}}
+      `Summarize this GitHub repository from the readme content below. Provide a detailed summary (approximately 250 words) and exactly 5 cool or interesting facts about the repository. Keep fact strings concise (one short sentence each).
 
 Readme content:
 
@@ -62,15 +67,52 @@ Readme content:
   ]);
   const messages = await prompt.invoke({ readme });
   const model = getChatModel();
-  const response = await model.invoke(messages);
-  const text =
-    typeof response.content === 'string'
-      ? response.content
-      : (response.content as { text?: string }[])?.[0]?.text ?? '';
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  const json = jsonMatch ? jsonMatch[0] : text.replace(/```json\n?|\n?```/g, '').trim();
-  const parsed = JSON.parse(json);
-  return GitHubSummarySchema.parse(parsed);
+
+  try {
+    const structuredModel = model.withStructuredOutput(GitHubSummarySchema);
+    const parsed = await structuredModel.invoke(messages);
+    return GitHubSummarySchema.parse(parsed);
+  } catch {
+    // Fallback: raw JSON parse when structured output is unavailable or fails
+    const response = await model.invoke(messages);
+    const text =
+      typeof response.content === 'string'
+        ? response.content
+        : (response.content as { text?: string }[])?.[0]?.text ?? '';
+    const jsonStr = extractJsonFromText(text);
+    const repaired = repairJsonString(jsonStr);
+    const parsed = JSON.parse(repaired);
+    return GitHubSummarySchema.parse(parsed);
+  }
+}
+
+/**
+ * Attempt to fix common JSON issues from LLM output (e.g. unterminated string).
+ * Truncates at the error position, closes the open string, then closes any open brackets/braces.
+ */
+function repairJsonString(jsonStr: string): string {
+  try {
+    JSON.parse(jsonStr);
+    return jsonStr;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!msg.includes('position') && !msg.includes('Unterminated')) return jsonStr;
+  }
+  const posMatch = jsonStr.match(/position (\d+)/);
+  const cut = posMatch ? Math.min(Number(posMatch[1]), jsonStr.length) : jsonStr.length;
+  let s = jsonStr.slice(0, cut);
+  const inDoubleQuote = (s.match(/"([^"\\]|\\.)*$/s) ?? [])[0];
+  if (inDoubleQuote) s = s.slice(0, s.length - inDoubleQuote.length) + '"';
+  let openBracket = 0;
+  let openBrace = 0;
+  for (const c of s) {
+    if (c === '[') openBracket++;
+    else if (c === ']') openBracket--;
+    else if (c === '{') openBrace++;
+    else if (c === '}') openBrace--;
+  }
+  s += ']'.repeat(Math.max(0, openBracket)) + '}'.repeat(Math.max(0, openBrace));
+  return s;
 }
 
 export async function POST(req: NextRequest) {
@@ -91,6 +133,18 @@ export async function POST(req: NextRequest) {
     }
     if (validation === 'disabled') {
       return NextResponse.json({ error: 'API key is disabled' }, { status: 403 });
+    }
+
+    const usageLimit = await getApiKeyUsageLimit(apiKey);
+    if (usageLimit && usageLimit.usage >= usageLimit.limit) {
+      return NextResponse.json(
+        {
+          error: 'Maximum API call limit reached',
+          usage: usageLimit.usage,
+          limit: usageLimit.limit,
+        },
+        { status: 429 }
+      );
     }
 
     const gitHubUrl = body?.gitHubUrl;
@@ -135,6 +189,8 @@ export async function POST(req: NextRequest) {
     if (summaryError) {
       response.summary_error = summaryError;
     }
+
+    await incrementApiKeyUsage(apiKey);
     return NextResponse.json(response);
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';

@@ -24,6 +24,8 @@ export type Database = {
           user_id: string | null;
           created_at_ts: string;
           updated_at: string;
+          usage: number;
+          limit: number;
         };
         Insert: {
           id?: string;
@@ -35,6 +37,8 @@ export type Database = {
           user_id?: string | null;
           created_at_ts?: string;
           updated_at?: string;
+          usage?: number;
+          limit?: number;
         };
         Update: {
           id?: string;
@@ -46,6 +50,8 @@ export type Database = {
           user_id?: string | null;
           created_at_ts?: string;
           updated_at?: string;
+          usage?: number;
+          limit?: number;
         };
       };
       users: {

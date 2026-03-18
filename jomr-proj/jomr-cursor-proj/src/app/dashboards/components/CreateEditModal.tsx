@@ -5,8 +5,8 @@ import type { ApiKey } from '../types';
 interface CreateEditModalProps {
   isOpen: boolean;
   editingKey: ApiKey | null;
-  formData: { name: string; key: string };
-  onFormChange: (data: { name: string; key: string }) => void;
+  formData: { name: string; key: string; limit: number };
+  onFormChange: (data: { name: string; key: string; limit: number }) => void;
   onGenerateKey: () => string;
   onCancel: () => void;
   onSubmit: () => void;
@@ -59,6 +59,21 @@ export function CreateEditModal({
                 </button>
               )}
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#888] mb-1">Rate limit (max API calls)</label>
+            <input
+              type="number"
+              min={1}
+              max={9999}
+              value={formData.limit}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10)
+                onFormChange({ ...formData, limit: Number.isNaN(v) || v < 1 ? 1 : Math.min(9999, v) })
+              }}
+              className="w-full rounded-lg border border-[#333] bg-[#0a0a0a] px-3 py-2 text-white placeholder:text-[#666] focus:border-[#3b82f6] focus:outline-none focus:ring-1 focus:ring-[#3b82f6]"
+            />
+            <p className="mt-1 text-xs text-[#666]">Maximum number of calls allowed for this key (e.g. github-summarizer). Default: 5.</p>
           </div>
         </div>
         <div className="mt-6 flex gap-3">

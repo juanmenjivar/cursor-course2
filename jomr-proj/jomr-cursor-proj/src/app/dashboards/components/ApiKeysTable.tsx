@@ -64,6 +64,9 @@ export function ApiKeysTable({
             <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#888] hidden lg:table-cell">
               Last Used
             </th>
+            <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#888] hidden md:table-cell">
+              Usage
+            </th>
             <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#888]">
               Actions
             </th>
@@ -73,7 +76,7 @@ export function ApiKeysTable({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-[#888]">
+              <td colSpan={8} className="px-4 py-12 text-center text-[#888]">
                 <div className="flex items-center justify-center gap-2">
                   <svg className="h-5 w-5 animate-spin text-[#3b82f6]" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -85,7 +88,7 @@ export function ApiKeysTable({
             </tr>
           ) : apiKeys.length === 0 ? (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-[#888]">
+              <td colSpan={8} className="px-4 py-12 text-center text-[#888]">
                 {actionsDisabled
                   ? 'Sign in to view and manage API keys.'
                   : searchQuery
@@ -171,6 +174,11 @@ export function ApiKeysTable({
                 </td>
                 <td className="px-2 sm:px-4 py-4 text-xs sm:text-sm text-[#888] hidden lg:table-cell">
                   {apiKey.lastUsed ? formatDate(apiKey.lastUsed) : 'Never'}
+                </td>
+                <td className="px-2 sm:px-4 py-4 hidden md:table-cell">
+                  <span className={`text-xs font-medium ${(apiKey.usage ?? 0) >= (apiKey.limit ?? 5) ? 'text-amber-400' : 'text-[#888]'}`} title="Calls used / max allowed">
+                    {(apiKey.usage ?? 0)} / {(apiKey.limit ?? 5)}
+                  </span>
                 </td>
                 <td className="px-2 sm:px-4 py-4">
                   <div className="flex items-center gap-1 sm:gap-2 flex-wrap">

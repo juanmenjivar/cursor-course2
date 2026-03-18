@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS api_keys (
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
   user_id UUID REFERENCES users(uuid) ON DELETE CASCADE, -- Run 003_users_add_uuid.sql then 004_api_keys_user_id_uuid.sql
   created_at_ts TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  usage INTEGER NOT NULL DEFAULT 0,
+  "limit" INTEGER NOT NULL DEFAULT 5
 );
 
 -- Create index for faster queries

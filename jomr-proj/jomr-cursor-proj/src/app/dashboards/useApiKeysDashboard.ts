@@ -31,7 +31,7 @@ export function useApiKeysDashboard() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
-  const [formData, setFormData] = useState({ name: '', key: '' });
+  const [formData, setFormData] = useState({ name: '', key: '', limit: 5 });
 
   const [showKey, setShowKey] = useState<Record<string, boolean>>({});
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
@@ -95,10 +95,11 @@ export function useApiKeysDashboard() {
         name: formData.name || 'Untitled API Key',
         key: formData.key || generateApiKey('jomr-'),
         status: 'active',
+        limit: formData.limit >= 1 ? formData.limit : 5,
       });
       await fetchData();
       setIsModalOpen(false);
-      setFormData({ name: '', key: '' });
+      setFormData({ name: '', key: '', limit: 5 });
     } catch (err) {
       console.error('Error creating API key:', err);
       setError(err instanceof Error ? err.message : 'Failed to create API key');
@@ -112,11 +113,12 @@ export function useApiKeysDashboard() {
       await updateApiKey(editingKey.id, {
         name: formData.name || editingKey.name,
         key: formData.key || editingKey.key,
+        limit: formData.limit >= 1 ? formData.limit : editingKey.limit ?? 5,
       });
       await fetchData();
       setIsModalOpen(false);
       setEditingKey(null);
-      setFormData({ name: '', key: '' });
+      setFormData({ name: '', key: '', limit: 5 });
     } catch (err) {
       console.error('Error updating API key:', err);
       setError(err instanceof Error ? err.message : 'Failed to update API key');
@@ -176,14 +178,14 @@ export function useApiKeysDashboard() {
   const openCreateModal = useCallback(() => {
     if (!isAuthenticated) return;
     setEditingKey(null);
-    setFormData({ name: '', key: '' });
+    setFormData({ name: '', key: '', limit: 5 });
     setIsModalOpen(true);
   }, [isAuthenticated]);
 
   const openEditModal = useCallback((key: ApiKey) => {
     if (!isAuthenticated) return;
     setEditingKey(key);
-    setFormData({ name: key.name, key: key.key });
+    setFormData({ name: key.name, key: key.key, limit: key.limit ?? 5 });
     setIsModalOpen(true);
   }, [isAuthenticated]);
 

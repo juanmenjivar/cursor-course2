@@ -14,6 +14,8 @@ export interface ApiKeyDto {
   createdAt: string
   lastUsed?: string | null
   status: 'active' | 'inactive'
+  usage: number
+  limit: number
 }
 
 function dbToDto(row: ApiKeyRow): ApiKeyDto {
@@ -24,6 +26,8 @@ function dbToDto(row: ApiKeyRow): ApiKeyDto {
     createdAt: row.created_at,
     lastUsed: row.last_used ?? undefined,
     status: (row.status as 'active' | 'inactive') || 'active',
+    usage: row.usage ?? 0,
+    limit: row.limit ?? 5,
   }
 }
 
@@ -41,14 +45,16 @@ export async function listApiKeys(userId: string): Promise<ApiKeyDto[]> {
 
 export async function createApiKey(
   userId: string,
-  data: { name: string; key: string; status?: 'active' | 'inactive' }
+  data: { name: string; key: string; status?: 'active' | 'inactive'; limit?: number }
 ): Promise<ApiKeyDto> {
   const supabase = createServerClient()
+  const limit = typeof data.limit === 'number' && data.limit >= 0 ? data.limit : 5
   const insert: ApiKeyInsert = {
     name: data.name,
     key: data.key,
     status: data.status || 'active',
     user_id: userId,
+    limit,
   }
   const { data: row, error } = await supabase
     .from('api_keys')
@@ -78,7 +84,7 @@ export async function getApiKeyById(id: string, userId: string): Promise<ApiKeyD
 export async function updateApiKey(
   id: string,
   userId: string,
-  updates: Partial<Pick<ApiKeyUpdate, 'name' | 'key' | 'status' | 'last_used'>>
+  updates: Partial<Pick<ApiKeyUpdate, 'name' | 'key' | 'status' | 'last_used' | 'limit'>>
 ): Promise<void> {
   const supabase = createServerClient()
   const { error } = await supabase
@@ -128,4 +134,48 @@ export async function validateApiKey(key: string): Promise<ValidationResult> {
   if (!data) return 'invalid'
   const row = data as { status: 'active' | 'inactive' }
   return row.status === 'active' ? 'valid' : 'disabled'
+}
+
+export async function getApiKeyUsageLimit(key: string): Promise<{ usage: number; limit: number } | null> {
+  if (!key?.trim()) return null
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('api_keys')
+    .select('usage, limit')
+    .eq('key', key.trim())
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (error || !data) return null
+  const row = data as { usage: number; limit: number }
+  return { usage: row.usage ?? 0, limit: row.limit ?? 5 }
+}
+
+export async function incrementApiKeyUsage(key: string): Promise<void> {
+  await incrementApiKeyUsageAndReturn(key)
+}
+
+/**
+ * Increment usage by 1 and return the new usage and limit.
+ * Returns null if key is invalid or not found.
+ */
+export async function incrementApiKeyUsageAndReturn(
+  key: string
+): Promise<{ usage: number; limit: number } | null> {
+  if (!key?.trim()) return null
+  const supabase = createServerClient()
+  const { data: row, error: selectError } = await supabase
+    .from('api_keys')
+    .select('usage, limit')
+    .eq('key', key.trim())
+    .maybeSingle()
+  if (selectError || !row) return null
+  const current = (row as { usage?: number; limit?: number }).usage ?? 0
+  const limit = (row as { usage?: number; limit?: number }).limit ?? 5
+  const { error: updateError } = await supabase
+    .from('api_keys')
+    .update({ usage: current + 1 } as never)
+    .eq('key', key.trim())
+  if (updateError) throw updateError
+  return { usage: current + 1, limit }
 }

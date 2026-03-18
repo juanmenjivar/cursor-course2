@@ -7,6 +7,8 @@ export interface ApiKey {
   createdAt: string
   lastUsed?: string | null
   status: 'active' | 'inactive'
+  usage: number
+  limit: number
 }
 
 export type ValidationResult = 'valid' | 'invalid' | 'disabled'
@@ -27,7 +29,7 @@ async function getJson<T>(res: Response): Promise<T> {
 
 export async function fetchAllApiKeys(): Promise<ApiKey[]> {
   const res = await fetch(API_KEYS_BASE, { credentials: 'include' })
-  const list = await getJson<Array<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive' }>>(res)
+  const list = await getJson<Array<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive'; usage?: number; limit?: number }>>(res)
   return list.map((k) => ({
     id: k.id,
     name: k.name,
@@ -35,6 +37,8 @@ export async function fetchAllApiKeys(): Promise<ApiKey[]> {
     createdAt: k.createdAt,
     lastUsed: k.lastUsed ?? undefined,
     status: k.status,
+    usage: k.usage ?? 0,
+    limit: k.limit ?? 5,
   }))
 }
 
@@ -42,6 +46,7 @@ export async function createApiKey(data: {
   name: string
   key: string
   status?: 'active' | 'inactive'
+  limit?: number
 }): Promise<ApiKey> {
   const res = await fetch(API_KEYS_BASE, {
     method: 'POST',
@@ -51,9 +56,10 @@ export async function createApiKey(data: {
       name: data.name || 'Untitled API Key',
       key: data.key,
       status: data.status || 'active',
+      limit: data.limit,
     }),
   })
-  const k = await getJson<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive' }>(res)
+  const k = await getJson<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive'; usage?: number; limit?: number }>(res)
   return {
     id: k.id,
     name: k.name,
@@ -61,6 +67,8 @@ export async function createApiKey(data: {
     createdAt: k.createdAt,
     lastUsed: k.lastUsed ?? undefined,
     status: k.status,
+    usage: k.usage ?? 0,
+    limit: k.limit ?? 5,
   }
 }
 
@@ -78,7 +86,7 @@ export async function validateApiKey(key: string): Promise<ValidationResult> {
 export async function fetchApiKeyById(id: string): Promise<ApiKey | null> {
   const res = await fetch(`${API_KEYS_BASE}/${encodeURIComponent(id)}`, { credentials: 'include' })
   if (res.status === 404) return null
-  const k = await getJson<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive' }>(res)
+  const k = await getJson<{ id: string; name: string; key: string; createdAt: string; lastUsed?: string | null; status: 'active' | 'inactive'; usage?: number; limit?: number }>(res)
   return {
     id: k.id,
     name: k.name,
@@ -86,18 +94,21 @@ export async function fetchApiKeyById(id: string): Promise<ApiKey | null> {
     createdAt: k.createdAt,
     lastUsed: k.lastUsed ?? undefined,
     status: k.status,
+    usage: k.usage ?? 0,
+    limit: k.limit ?? 5,
   }
 }
 
 export async function updateApiKey(
   id: string,
-  updates: Partial<{ name: string; key: string; status: 'active' | 'inactive'; last_used: string }>
+  updates: Partial<{ name: string; key: string; status: 'active' | 'inactive'; last_used: string; limit: number }>
 ): Promise<void> {
-  const body: Record<string, string> = {}
+  const body: Record<string, string | number> = {}
   if (updates.name !== undefined) body.name = updates.name
   if (updates.key !== undefined) body.key = updates.key
   if (updates.status !== undefined) body.status = updates.status
   if (updates.last_used !== undefined) body.last_used = updates.last_used
+  if (updates.limit !== undefined) body.limit = updates.limit
   if (Object.keys(body).length === 0) return
   const res = await fetch(`${API_KEYS_BASE}/${encodeURIComponent(id)}`, {
     method: 'PATCH',

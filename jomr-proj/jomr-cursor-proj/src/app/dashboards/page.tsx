@@ -64,7 +64,7 @@ export default function DashboardsPage() {
   const closeCreateEditModal = () => {
     setIsModalOpen(false);
     setEditingKey(null);
-    setFormData({ name: '', key: '' });
+    setFormData({ name: '', key: '', limit: 5 });
   };
 
   return (

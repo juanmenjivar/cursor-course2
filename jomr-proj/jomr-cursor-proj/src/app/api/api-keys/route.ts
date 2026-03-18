@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  let body: { name?: string; key?: string; status?: 'active' | 'inactive' }
+  let body: { name?: string; key?: string; status?: 'active' | 'inactive'; limit?: number }
   try {
     body = await req.json()
   } catch {
@@ -40,8 +40,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing or invalid "key" in body' }, { status: 400 })
   }
   const status = body?.status === 'inactive' ? 'inactive' : 'active'
+  const limit = typeof body?.limit === 'number' && body.limit >= 0 ? body.limit : undefined
   try {
-    const created = await apiKeysServer.createApiKey(userId, { name, key, status })
+    const created = await apiKeysServer.createApiKey(userId, { name, key, status, limit })
     return NextResponse.json(created)
   } catch (err) {
     const raw = (err as { message?: string })?.message ?? (err instanceof Error ? err.message : null)

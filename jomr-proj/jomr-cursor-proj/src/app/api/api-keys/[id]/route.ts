@@ -50,10 +50,11 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
-  const updates: { name?: string; key?: string; status?: 'active' | 'inactive' } = {}
+  const updates: { name?: string; key?: string; status?: 'active' | 'inactive'; limit?: number } = {}
   if (typeof body?.name === 'string') updates.name = body.name.trim()
   if (typeof body?.key === 'string') updates.key = body.key.trim()
   if (body?.status === 'active' || body?.status === 'inactive') updates.status = body.status
+  if (typeof body?.limit === 'number' && body.limit >= 0) updates.limit = body.limit
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
   }
