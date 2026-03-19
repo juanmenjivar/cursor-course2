@@ -48,6 +48,36 @@ async function fetchReadmeFromGitHub(owner: string, repo: string): Promise<strin
   return null;
 }
 
+interface RepoMeta {
+  stars: number | null
+  latestVersion: string | null
+}
+
+async function fetchRepoMeta(owner: string, repo: string): Promise<RepoMeta> {
+  const out: RepoMeta = { stars: null, latestVersion: null }
+  try {
+    const [repoResp, releaseResp] = await Promise.all([
+      fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      }),
+      fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      }),
+    ])
+    if (repoResp.ok) {
+      const data = (await repoResp.json()) as { stargazers_count?: number }
+      out.stars = typeof data.stargazers_count === 'number' ? data.stargazers_count : null
+    }
+    if (releaseResp.ok) {
+      const data = (await releaseResp.json()) as { tag_name?: string }
+      out.latestVersion = typeof data.tag_name === 'string' ? data.tag_name : null
+    }
+  } catch {
+    // leave stars and latestVersion as null
+  }
+  return out
+}
+
 function extractJsonFromText(text: string): string {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (jsonMatch) return jsonMatch[0];
@@ -187,7 +217,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const readme = await fetchReadmeFromGitHub(repoInfo.owner, repoInfo.repo);
+    const [readme, repoMeta] = await Promise.all([
+      fetchReadmeFromGitHub(repoInfo.owner, repoInfo.repo),
+      fetchRepoMeta(repoInfo.owner, repoInfo.repo),
+    ])
     if (!readme) {
       return NextResponse.json(
         { error: 'Could not find README in the specified repository' },
@@ -206,6 +239,8 @@ export async function POST(req: NextRequest) {
     const response: Record<string, unknown> = {
       owner: repoInfo.owner,
       repo: repoInfo.repo,
+      stars: repoMeta.stars,
+      latest_version: repoMeta.latestVersion,
       summary: result?.summary ?? null,
       cool_fact: result?.cool_fact ?? null,
     };
