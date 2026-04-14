@@ -14,7 +14,7 @@ Follow these steps to enable "Sign in with Google" on your app.
    - Add your email to Test users if in Testing mode
 6. For **Application type**, select **Web application**
 7. Add **Authorized redirect URIs**:
-   - Local (Docker): `http://localhost:3000/api/auth/callback/google`
+   - Local (Docker): `http://localhost:4000/api/auth/callback/google`
    - Production: `https://your-domain.com/api/auth/callback/google`
 8. Click **Create** and copy the **Client ID** and **Client Secret**
 
@@ -31,7 +31,7 @@ GOOGLE_CLIENT_SECRET=your-client-secret
 NEXTAUTH_SECRET=your-random-secret-at-least-32-chars
 
 # Required for Docker/callback URLs (use the URL users see in browser)
-NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_URL=http://localhost:4000
 ```
 
 **Generate NEXTAUTH_SECRET:**
@@ -56,7 +56,7 @@ docker compose -f docker-compose.dev.yml up
 
 ## Step 4: Test the Flow
 
-1. Open `http://localhost:3000` in your browser
+1. Open `http://localhost:4000` in your browser
 2. Click **Sign in with Google**
 3. Choose your Google account
 4. You should be redirected back and see your email + a **Sign out** button
@@ -66,6 +66,6 @@ docker compose -f docker-compose.dev.yml up
 | Issue | Fix |
 |-------|-----|
 | "Configuration" error | Ensure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` are set in your env file |
-| Redirect URI mismatch | Add `http://localhost:3000/api/auth/callback/google` exactly in Google Console |
+| Redirect URI mismatch | Add `http://localhost:4000/api/auth/callback/google` exactly in Google Console |
 | OAuth consent screen | If app is in Testing, add your email under Test users |
 | Docker can't read env | Ensure `.env.local` exists in project root (compose uses `env_file: .env.local`) |

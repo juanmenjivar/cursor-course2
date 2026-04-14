@@ -1,6 +1,6 @@
 // Server-only API key operations (used by API routes). Do not import in client code.
 
-import { createServerClient } from '@/lib/supabase'
+import { createPrivilegedServerClient } from '@/lib/supabase'
 import type { Database } from '@/lib/database.types'
 
 type ApiKeyRow = Database['public']['Tables']['api_keys']['Row']
@@ -32,7 +32,7 @@ function dbToDto(row: ApiKeyRow): ApiKeyDto {
 }
 
 export async function listApiKeys(userId: string): Promise<ApiKeyDto[]> {
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { data, error } = await supabase
     .from('api_keys')
     .select('*')
@@ -47,7 +47,7 @@ export async function createApiKey(
   userId: string,
   data: { name: string; key: string; status?: 'active' | 'inactive'; limit?: number }
 ): Promise<ApiKeyDto> {
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const limit = typeof data.limit === 'number' && data.limit >= 0 ? data.limit : 5
   const insert: ApiKeyInsert = {
     name: data.name,
@@ -68,7 +68,7 @@ export async function createApiKey(
 }
 
 export async function getApiKeyById(id: string, userId: string): Promise<ApiKeyDto | null> {
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { data, error } = await supabase
     .from('api_keys')
     .select('*')
@@ -86,7 +86,7 @@ export async function updateApiKey(
   userId: string,
   updates: Partial<Pick<ApiKeyUpdate, 'name' | 'key' | 'status' | 'last_used' | 'limit'>>
 ): Promise<void> {
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { error } = await supabase
     .from('api_keys')
     .update(updates as never)
@@ -97,7 +97,7 @@ export async function updateApiKey(
 }
 
 export async function deleteApiKey(id: string, userId: string): Promise<void> {
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { error } = await supabase
     .from('api_keys')
     .delete()
@@ -109,7 +109,7 @@ export async function deleteApiKey(id: string, userId: string): Promise<void> {
 
 export async function deleteApiKeys(ids: string[], userId: string): Promise<void> {
   if (ids.length === 0) return
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { error } = await supabase
     .from('api_keys')
     .delete()
@@ -123,7 +123,7 @@ export type ValidationResult = 'valid' | 'invalid' | 'disabled'
 
 export async function validateApiKey(key: string): Promise<ValidationResult> {
   if (!key?.trim()) return 'invalid'
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { data, error } = await supabase
     .from('api_keys')
     .select('id, status')
@@ -138,7 +138,7 @@ export async function validateApiKey(key: string): Promise<ValidationResult> {
 
 export async function getApiKeyUsageLimit(key: string): Promise<{ usage: number; limit: number } | null> {
   if (!key?.trim()) return null
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { data, error } = await supabase
     .from('api_keys')
     .select('usage, limit')
@@ -163,7 +163,7 @@ export async function incrementApiKeyUsageAndReturn(
   key: string
 ): Promise<{ usage: number; limit: number } | null> {
   if (!key?.trim()) return null
-  const supabase = createServerClient()
+  const supabase = createPrivilegedServerClient()
   const { data: row, error: selectError } = await supabase
     .from('api_keys')
     .select('usage, limit')

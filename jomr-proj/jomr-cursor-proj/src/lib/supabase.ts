@@ -3,6 +3,22 @@ import type { Database } from './database.types';
 
 // Lazy init: avoids throwing during Docker build when env vars aren't available yet
 let _supabase: SupabaseClient<Database> | null = null;
+let _supabaseServiceRole: SupabaseClient<Database> | null = null;
+
+/**
+ * Server-only client with the **service role** key (bypasses RLS).
+ * Set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` if anon reads to `users` are blocked by RLS.
+ */
+export function createServiceRoleClient(): SupabaseClient<Database> | null {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!supabaseUrl || !serviceKey) return null;
+  if (_supabaseServiceRole) return _supabaseServiceRole;
+  _supabaseServiceRole = createClient<Database>(supabaseUrl, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  return _supabaseServiceRole;
+}
 
 function getSupabase(): SupabaseClient<Database> {
   if (_supabase) return _supabase;
@@ -28,3 +44,12 @@ export const supabase = new Proxy({} as SupabaseClient<Database>, {
 export const createServerClient = () => {
   return getSupabase();
 };
+
+/**
+ * Trusted server code: uses **service role** when `SUPABASE_SERVICE_ROLE_KEY` is set, otherwise anon.
+ */
+export function createPrivilegedServerClient(): SupabaseClient<Database> {
+  const service = createServiceRoleClient();
+  if (service) return service;
+  return createServerClient();
+}

@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUserId } from '@/lib/get-auth-user-id';
+import { requireAuthUserIdOrResponse } from '@/lib/get-auth-user-id';
 import { invokeGemini, streamGemini } from '@/lib/llm';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
-  const userId = await getAuthUserId();
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'Please sign in to use AI Chat.' },
-      { status: 401 }
-    );
-  }
+  const auth = await requireAuthUserIdOrResponse('Please sign in to use AI Chat.');
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const body = await req.json();

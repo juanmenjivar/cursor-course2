@@ -57,7 +57,7 @@ docker-compose up --build
 docker-compose up -d --build
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:4000`
 
 #### Development Mode (Hot Reload)
 
@@ -153,9 +153,9 @@ Environment variables can be set in two ways:
 
 ## Troubleshooting
 
-### "Connection failed" at http://localhost:3000
+### "Connection failed" at http://localhost:4000
 
-1. **Port mapping**: The app listens on **port 3000** inside the container. Compose must map `3000:3000`. If you see `8000:8000` or similar, change it to `3000:3000` in both `docker-compose.yml` and `docker-compose.dev.yml`.
+1. **Port mapping**: The app listens on **port 4000** inside the container. Compose must map `4000:4000`. If you see `8000:8000` or similar, change it to `4000:4000` in both `docker-compose.yml` and `docker-compose.dev.yml`.
 
 2. **Binding inside container**: Next.js must listen on `0.0.0.0` (not `127.0.0.1`) so the host can reach it. The setup uses `HOSTNAME=0.0.0.0` and `next dev -H 0.0.0.0` for this.
 
@@ -163,7 +163,7 @@ Environment variables can be set in two ways:
    ```bash
    docker ps
    ```
-   You should see `jomr-cursor-proj` or `jomr-cursor-proj-dev` with port `0.0.0.0:3000->3000/tcp`.
+   You should see `jomr-cursor-proj` or `jomr-cursor-proj-dev` with port `0.0.0.0:4000->4000/tcp`.
 
 4. **Check logs** for errors (build/runtime):
    ```bash
@@ -177,17 +177,17 @@ Environment variables can be set in two ways:
    docker-compose down
    docker-compose up --build
    ```
-   Then open **http://localhost:3000** (not 8000).
+   Then open **http://localhost:4000** (not 8000).
 
 ### Port Already in Use
 
-If port 3000 is already in use, change it in `docker-compose.yml`:
+If port 4000 is already in use, change it in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "3001:3000"  # Use port 3001 on host
+  - "4001:4000"  # Use port 4001 on host
 ```
-Then open http://localhost:3001
+Then open http://localhost:4001
 
 ### Container Won't Start
 
@@ -263,7 +263,7 @@ For production deployment:
 
 2. Run the container:
    ```bash
-   docker run -p 3000:3000 \
+   docker run -p 4000:4000 \
      -e NEXT_PUBLIC_SUPABASE_URL=your-url \
      -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key \
      jomr-cursor-proj:latest
@@ -278,7 +278,7 @@ docker-compose -f docker-compose.yml up -d
 ## Container Details
 
 - **Base Image**: `node:20-alpine` (lightweight Alpine Linux)
-- **Port**: 3000 (configurable)
+- **Port**: 4000 (configurable)
 - **User**: Runs as non-root user (`nextjs`) for security
 - **Health Check**: Built-in health check endpoint
 

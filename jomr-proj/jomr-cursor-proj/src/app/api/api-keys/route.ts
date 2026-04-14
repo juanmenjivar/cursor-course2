@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthUserId } from '@/lib/get-auth-user-id'
+import { requireAuthUserIdOrResponse } from '@/lib/get-auth-user-id'
 import * as apiKeysServer from '@/lib/api-keys-server'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
-  const userId = await getAuthUserId()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAuthUserIdOrResponse()
+  if (auth instanceof NextResponse) return auth
+  const { userId } = auth
   try {
     const keys = await apiKeysServer.listApiKeys(userId)
     return NextResponse.json(keys)
@@ -24,10 +23,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = await getAuthUserId()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAuthUserIdOrResponse()
+  if (auth instanceof NextResponse) return auth
+  const { userId } = auth
   let body: { name?: string; key?: string; status?: 'active' | 'inactive'; limit?: number }
   try {
     body = await req.json()

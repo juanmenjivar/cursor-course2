@@ -1,24 +1,31 @@
 services:
-  # Next.js Application (listens on port 3000 inside container)
+  # Next.js Application (listens on port 4000 inside container)
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: jomr-cursor-proj
     ports:
-      - "3000:3000"
+      - "4000:4000"
     environment:
       # Do NOT set NEXT_PUBLIC_* here - they are loaded from env_file. Host interpolation would override env_file with empty values.
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=4000
       - HOSTNAME=0.0.0.0
     # Env: .env.local in project root
     env_file:
       - .env.local
+    volumes:
+      # Persist Next.js runtime cache (e.g. fetch / ISR) across container recreations.
+      - dck-vol-jomr-prod:/app/.next/cache
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:4000"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  dck-vol-jomr-prod:
+    name: dck-vol-jomr-prod
