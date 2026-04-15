@@ -7,19 +7,22 @@ import { useSession } from 'next-auth/react';
 import Sidebar, { SidebarToggle } from '@/components/Sidebar';
 
 const PLAYGROUND_KEY_STORAGE = 'playground_api_key';
+const PLAYGROUND_URL_STORAGE = 'playground_github_url';
 
 export default function PlaygroundPage() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated' && !!session?.user;
   const [apiKey, setApiKey] = useState('');
+  const [gitHubUrl, setGitHubUrl] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAuthenticated || !apiKey.trim()) return;
+    if (!isAuthenticated || !apiKey.trim() || !gitHubUrl.trim()) return;
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(PLAYGROUND_KEY_STORAGE, apiKey.trim());
+      sessionStorage.setItem(PLAYGROUND_URL_STORAGE, gitHubUrl.trim());
     }
     router.push('/dashboards/playground/validate');
   };
@@ -38,7 +41,7 @@ export default function PlaygroundPage() {
 
           <h1 className="mb-2 text-2xl font-semibold text-white">API Playground</h1>
           <p className="mb-8 text-[#888]">
-            Enter an API key to validate it against your stored keys.
+            Enter an API key and a GitHub repository URL to validate and summarize.
           </p>
 
           {!isAuthenticated && (
@@ -60,12 +63,24 @@ export default function PlaygroundPage() {
               required
               disabled={!isAuthenticated}
             />
+            <label className="block text-sm font-medium text-[#888] mb-2">
+              GitHub URL
+            </label>
+            <input
+              type="url"
+              value={gitHubUrl}
+              onChange={(e) => setGitHubUrl(e.target.value)}
+              placeholder="https://github.com/owner/repo"
+              className="mb-4 w-full rounded-lg border border-[#333] bg-[#0a0a0a] px-3 py-2.5 text-sm text-white placeholder:text-[#666] focus:border-[#3b82f6] focus:outline-none focus:ring-1 focus:ring-[#3b82f6] disabled:opacity-50"
+              required
+              disabled={!isAuthenticated}
+            />
             <button
               type="submit"
               disabled={!isAuthenticated}
               className="rounded-lg bg-[#3b82f6] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#3b82f6]"
             >
-              Validate Key
+              Validate & Summarize
             </button>
           </form>
         </div>

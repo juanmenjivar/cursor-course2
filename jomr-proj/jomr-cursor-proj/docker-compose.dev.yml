@@ -5,9 +5,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: jomr-cursor-proj-dev-container
-    # Port 4000 avoids common Windows Hyper-V/WSL excluded ranges that include 3000.
+    # Port 8000 is the project default (change host side if this port is reserved on Windows).
     ports:
-      - "4000:4000"
+      - "8000:8000"
     volumes:
       - .:/app
       - dck-vol-jomr-dev:/app/node_modules
@@ -18,10 +18,10 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
-      - PORT=4000
+      - PORT=8000
       - HOSTNAME=0.0.0.0
       # NextAuth: URL the browser uses to access the app (required for session fetch in Docker)
-      - NEXTAUTH_URL=http://localhost:4000
+      - NEXTAUTH_URL=http://localhost:8000
       # NextAuth: Trust Host header (required for Docker/proxies; use env var since trustHost not in v4 types)
       - AUTH_TRUST_HOST=true
     # Env: .env.local in project root (Next.js loads from cwd; Docker injects via env_file)

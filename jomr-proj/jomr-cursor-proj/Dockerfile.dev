@@ -18,7 +18,7 @@ RUN yarn config set strict-ssl false && \
 COPY . .
 
 # Expose the development server port
-EXPOSE 4000
+EXPOSE 8000
 
 # Default command (can be overridden in docker-compose)
 CMD ["yarn", "dev"]

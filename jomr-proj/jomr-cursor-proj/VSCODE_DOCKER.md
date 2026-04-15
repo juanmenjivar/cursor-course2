@@ -109,7 +109,7 @@ Dev Containers allows you to develop entirely inside a Docker container with ful
 
 3. **Terminal**
    - All terminals will run inside the container
-   - The dev server will be available at `http://localhost:4000`
+   - The dev server will be available at `http://localhost:8000`
 
 4. **Extensions**
    - Extensions listed in `devcontainer.json` will be auto-installed
@@ -126,7 +126,7 @@ Dev Containers allows you to develop entirely inside a Docker container with ful
 
 The `.devcontainer/devcontainer.json` file is already configured:
 - Uses `docker-compose.dev.yml`
-- Auto-forwards port 4000
+- Auto-forwards port 8000
 - Installs recommended extensions
 - Sets up Node.js environment
 
@@ -202,7 +202,7 @@ Then run tasks with `Ctrl+Shift+P` > "Tasks: Run Task"
 - Or change the port in `docker-compose.yml`:
   ```yaml
   ports:
-    - "4001:4000"  # Use 4001 on host
+    - "4001:8000"  # Use 4001 on host, app still listens on 8000 in container
   ```
 
 ### Container Not Starting

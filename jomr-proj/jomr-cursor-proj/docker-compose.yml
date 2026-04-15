@@ -1,16 +1,16 @@
 services:
-  # Next.js Application (listens on port 4000 inside container)
+  # Next.js Application (listens on port 8000 inside container)
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: jomr-cursor-proj
     ports:
-      - "4000:4000"
+      - "8000:8000"
     environment:
       # Do NOT set NEXT_PUBLIC_* here - they are loaded from env_file. Host interpolation would override env_file with empty values.
       - NODE_ENV=production
-      - PORT=4000
+      - PORT=8000
       - HOSTNAME=0.0.0.0
     # Env: .env.local in project root
     env_file:
@@ -20,7 +20,7 @@ services:
       - dck-vol-jomr-prod:/app/.next/cache
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:4000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8000"]
       interval: 30s
       timeout: 10s
       retries: 3
